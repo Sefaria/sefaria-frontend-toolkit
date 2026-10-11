@@ -16,7 +16,7 @@ on:
         required: true
         type: string
       source:
-        description: Full reviewed current main commit SHA
+        description: Full reviewed main source SHA (current main for preparation)
         required: true
         type: string
       resume:
@@ -35,25 +35,39 @@ env:
   RELEASE_VERSION: ${{ inputs.version }}
   RELEASE_SOURCE: ${{ inputs.source }}
   RELEASE_RESUME: ${{ inputs.resume }}
+  RELEASE_OPERATION: ${{ inputs.operation }}
 
 jobs:
   guard:
     if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    outputs:
+      controller: ${{ steps.history.outputs.controller }}
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: main
           fetch-depth: 0
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22.14.0
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - id: history
+        run: |
+          node scripts/npm-release.mjs assert-history
+          echo "controller=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source }}
+          path: candidate
       - run: node scripts/npm-release.mjs assert-source
+        env:
+          RELEASE_REPOSITORY: candidate
 
   prepare:
     needs: guard
@@ -69,22 +83,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ needs.guard.outputs.controller }}
+          path: control
+          fetch-depth: 0
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source }}
+          path: candidate
           fetch-depth: 0
       - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: control/package.json
       - uses: actions/setup-node@v4
         with:
           node-version: 22.14.0
           cache: pnpm
+          cache-dependency-path: |
+            control/pnpm-lock.yaml
+            candidate/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+        working-directory: control
       - run: pnpm setup:agent
+        working-directory: candidate
       - run: npm install --global npm@11.5.2
-      - run: node scripts/npm-release.mjs assert-source
+      - run: node ../control/scripts/npm-release.mjs assert-source
+        working-directory: candidate
+        env:
+          RELEASE_REPOSITORY: ${{ github.workspace }}/candidate
       - run: pnpm check
+        working-directory: candidate
         env:
           SEFARIA_RELEASE_PREPARE: "true"
       - uses: actions/upload-artifact@v4
         with:
           name: qualified-npm-${{ runner.os }}
-          path: .artifacts/npm-release/
+          path: candidate/.artifacts/npm-release/
           if-no-files-found: error
           retention-days: 7
 
@@ -97,6 +130,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.guard.outputs.controller }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -138,6 +173,8 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.guard.outputs.controller }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -152,12 +189,14 @@ jobs:
       - run: node scripts/npm-release.mjs publish
 
   verify:
-    needs: [draft, publish]
+    needs: [guard, draft, publish]
     if: ${{ always() && needs.draft.result == 'success' && ((inputs.operation == 'publish' && needs.publish.result == 'success') || (inputs.operation == 'verify-finalize' && needs.publish.result == 'skipped')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.guard.outputs.controller }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -181,6 +220,8 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.guard.outputs.controller }}
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
