@@ -4,6 +4,7 @@ import path from "node:path";
 import YAML from "yaml";
 import { validateNpmWorkflow } from "./npm-release-policy.mjs";
 import release from "./npm-documentation-release.json" with { type: "json" };
+import { validatePagesWorkflow } from "./pages-workflow-policy.mjs";
 
 const RETIRED_ACTIVE_PREFIXES = [
   "demos/linker/",
@@ -156,168 +157,6 @@ export function validateWorkflowPolicy(workflows) {
   return issues;
 }
 
-function validatePagesWorkflow(workflow, issues, filename) {
-  const approvedActions = new Set([
-    "actions/checkout@v4",
-    "pnpm/action-setup@v4",
-    "actions/setup-node@v4",
-    "actions/cache@v4",
-    "actions/configure-pages@v5",
-    "actions/upload-pages-artifact@v5",
-    "actions/deploy-pages@v5",
-  ]);
-  const events = workflow.on;
-  const jobs = workflow.jobs;
-  const build = isRecord(jobs) ? jobs.build : undefined;
-  const deploy = isRecord(jobs) ? jobs.deploy : undefined;
-  const buildSteps =
-    isRecord(build) && Array.isArray(build.steps) ? build.steps : [];
-  const deploySteps =
-    isRecord(deploy) && Array.isArray(deploy.steps) ? deploy.steps : [];
-  const expectedBuildSteps = [
-    { uses: "actions/checkout@v4", with: { ref: "main" } },
-    { uses: "pnpm/action-setup@v4" },
-    {
-      uses: "actions/setup-node@v4",
-      with: {
-        "node-version": 22,
-        cache: "pnpm",
-      },
-    },
-    {
-      uses: "actions/cache@v4",
-      with: {
-        path: "~/.cache/ms-playwright",
-        key: "playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}",
-      },
-    },
-    { run: "pnpm setup:agent" },
-    {
-      name: "Reuse CI validation of this commit",
-      id: "ci",
-      run: "node scripts/pages-validation.mjs",
-      env: {
-        EVENT_NAME: "${{ github.event_name }}",
-        WORKFLOW_NAME: "${{ github.event.workflow_run.name }}",
-        WORKFLOW_EVENT: "${{ github.event.workflow_run.event }}",
-        WORKFLOW_CONCLUSION: "${{ github.event.workflow_run.conclusion }}",
-        WORKFLOW_HEAD_SHA: "${{ github.event.workflow_run.head_sha }}",
-      },
-    },
-    { if: "${{ steps.ci.outputs.validated != 'true' }}", run: "pnpm check" },
-    {
-      if: "${{ steps.ci.outputs.validated == 'true' }}",
-      run: "pnpm build && pnpm build:site:bundles && pnpm test:site",
-    },
-    {
-      run: "node scripts/script-source-release.mjs restore",
-      env: { GITHUB_TOKEN: "${{ github.token }}" },
-    },
-    { uses: "actions/configure-pages@v5" },
-    {
-      uses: "actions/upload-pages-artifact@v5",
-      with: { path: "dist/site" },
-    },
-  ];
-  const expectedDeploySteps = [
-    {
-      name: "Deploy GitHub Pages",
-      id: "deployment",
-      uses: "actions/deploy-pages@v5",
-    },
-  ];
-
-  if (
-    !isRecord(jobs) ||
-    JSON.stringify(Object.keys(jobs).sort()) !==
-      JSON.stringify(["build", "deploy"])
-  ) {
-    issues.push(`Pages workflow jobs are incorrect in ${filename}`);
-  }
-
-  if (
-    !isRecord(events) ||
-    !hasOnlyEntries(events.workflow_run, {
-      workflows: ["CI", "Retire script version"],
-      types: ["completed"],
-      branches: ["main"],
-    }) ||
-    build?.if !==
-      "${{ github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository && ((github.event.workflow_run.name == 'CI' && github.event.workflow_run.event == 'push') || (github.event.workflow_run.name == 'Retire script version' && github.event.workflow_run.event == 'workflow_dispatch')))) }}"
-  ) {
-    issues.push(`Pages workflow gate is not main-only in ${filename}`);
-  }
-
-  if (
-    !hasOnlyEntries(workflow.permissions, { contents: "read" }) ||
-    !isRecord(build) ||
-    !hasOnlyEntries(build.permissions, {
-      contents: "read",
-      pages: "read",
-    }) ||
-    build["timeout-minutes"] !== 60 ||
-    !isRecord(deploy) ||
-    !hasOnlyEntries(deploy.permissions, {
-      contents: "read",
-      pages: "write",
-      "id-token": "write",
-    }) ||
-    deploy["timeout-minutes"] !== 15
-  ) {
-    issues.push(`Pages workflow permissions are incorrect in ${filename}`);
-  }
-
-  const unapprovedAction = [...buildSteps, ...deploySteps].find(
-    (step) =>
-      isRecord(step) &&
-      typeof step.uses === "string" &&
-      !approvedActions.has(step.uses),
-  );
-  if (unapprovedAction) {
-    issues.push(`unapproved Pages action in ${filename}`);
-  }
-
-  if (
-    JSON.stringify(buildSteps) !== JSON.stringify(expectedBuildSteps) ||
-    JSON.stringify(deploySteps) !== JSON.stringify(expectedDeploySteps)
-  ) {
-    issues.push(`Pages workflow steps are incorrect in ${filename}`);
-  }
-
-  const checkIndex = buildSteps.findIndex(
-    (step) => isRecord(step) && step.run === "pnpm check",
-  );
-  const configureIndex = buildSteps.findIndex(
-    (step) => isRecord(step) && step.uses === "actions/configure-pages@v5",
-  );
-  const uploadIndex = buildSteps.findIndex(
-    (step) =>
-      isRecord(step) && step.uses === "actions/upload-pages-artifact@v5",
-  );
-  const upload = buildSteps[uploadIndex];
-  const deployIndex = deploySteps.findIndex(
-    (step) => isRecord(step) && step.uses === "actions/deploy-pages@v5",
-  );
-  if (
-    !isRecord(build) ||
-    !hasOnlyEntries(build.env, {
-      SITE_BASE_PATH: "/sefaria-frontend-toolkit/",
-    }) ||
-    checkIndex === -1 ||
-    configureIndex <= checkIndex ||
-    uploadIndex <= configureIndex ||
-    !isRecord(upload) ||
-    !hasOnlyEntries(upload.with, { path: "dist/site" }) ||
-    !isRecord(deploy) ||
-    deploy.needs !== "build" ||
-    deployIndex === -1
-  ) {
-    issues.push(
-      `Pages build/upload/deploy ordering is incorrect in ${filename}`,
-    );
-  }
-}
-
 function validateCiWorkflow(workflow, issues, filename) {
   const events = workflow.on;
   const jobs = workflow.jobs;
@@ -325,11 +164,11 @@ function validateCiWorkflow(workflow, issues, filename) {
     !isRecord(events) ||
     JSON.stringify(events.pull_request) !==
       JSON.stringify({
-        branches: ["main"],
+        branches: ["main", "release/docs"],
       }) ||
     JSON.stringify(events.push) !==
       JSON.stringify({
-        branches: ["main"],
+        branches: ["main", "release/docs"],
       })
   ) {
     issues.push(`unexpected CI branch scope in ${filename}`);
@@ -725,7 +564,8 @@ function walkWorkflow(value, valuePath, issues, filename) {
       valuePath[0] === "jobs" &&
       ((isRetirementWorkflow(filename) && valuePath[1] === "retire") ||
         (isDriftWorkflow(filename) && valuePath[1] === "detect") ||
-        (isPagesWorkflow(filename) && valuePath[1] === "build"));
+        (isPagesWorkflow(filename) &&
+          ["build", "resolve"].includes(valuePath[1])));
     if (CREDENTIAL_NAME.test(key) && !pagesIdentityToken && !scriptToken) {
       issues.push(
         `publication credential in ${filename}:${nextPath.join(".")}`,
@@ -738,7 +578,11 @@ function walkWorkflow(value, valuePath, issues, filename) {
           valuePath[0] === "jobs" &&
           ((valuePath[1] === "build" &&
             ((permission === "contents" && access === "read") ||
-              (permission === "pages" && access === "read"))) ||
+              (permission === "pages" && access === "read") ||
+              (permission === "deployments" && access === "read"))) ||
+            (valuePath[1] === "resolve" &&
+              permission === "deployments" &&
+              access === "read") ||
             (valuePath[1] === "deploy" &&
               ((permission === "contents" && access === "read") ||
                 (permission === "pages" && access === "write") ||

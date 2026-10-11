@@ -2,6 +2,7 @@ import { readFile, readdir } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { PACKAGE_DEFINITIONS } from "../scripts/package-publication.mjs";
 import release from "../scripts/npm-documentation-release.json";
+import { packageBrowserUrls } from "../scripts/site-module-urls.mjs";
 import { renderLlmsTxt } from "../scripts/reference/llms.js";
 import {
   npmDocumentationFiles,
@@ -126,6 +127,7 @@ Historical Pages version 0.0.0-alpha.37286368389.1`;
   it("documents both exact-version CDN hosts and real package browser paths", async () => {
     const page = await read("docs/help/install-and-status.md");
     const runner = await read("docs/.vitepress/theme/CodeLanguageToggle.vue");
+    const urls = packageBrowserUrls(version, false);
     for (const definition of PACKAGE_DEFINITIONS) {
       const manifest = JSON.parse(
         await read(`${definition.directory}/package.json`),
@@ -140,8 +142,9 @@ Historical Pages version 0.0.0-alpha.37286368389.1`;
         );
       }
       if (definition.name !== "@sefaria/web-components") {
-        expect(runner).toContain(
-          `https://cdn.jsdelivr.net/npm/${definition.name}@\${release.version}/dist/browser/${definition.browserFile}`,
+        expect(runner).toContain(`browserModuleUrls["${definition.name}"]`);
+        expect(urls[definition.name]).toBe(
+          `https://cdn.jsdelivr.net/npm/${definition.name}@${version}/dist/browser/${definition.browserFile}`,
         );
       }
     }

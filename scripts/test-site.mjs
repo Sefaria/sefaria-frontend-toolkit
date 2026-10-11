@@ -10,7 +10,10 @@ import { readSiteBasePath } from "./build-site-plan.mjs";
 import { legacyRedirects } from "../docs/.vitepress/redirects.mjs";
 import { createFixtureResponse } from "./site-fixtures.mjs";
 import { startSitePreview } from "./site-preview-server.mjs";
+import { moduleUrls, rewriteModuleUrls } from "./site-module-urls.mjs";
 import release from "./npm-documentation-release.json" with { type: "json" };
+
+const releaseVersion = process.env.SITE_RELEASE_VERSION;
 
 const root = path.resolve(import.meta.dirname, "..");
 const siteBasePath = readSiteBasePath(process.argv.slice(2));
@@ -34,7 +37,7 @@ try {
         "utf8",
       ),
     );
-    const snippet = await readFile(
+    const snippetSource = await readFile(
       path.join(
         root,
         "examples",
@@ -43,6 +46,9 @@ try {
       ),
       "utf8",
     );
+    const snippet = releaseVersion
+      ? rewriteModuleUrls(snippetSource, releaseVersion)
+      : snippetSource;
     const localScript = await readFile(
       path.join(root, "dist", "site", "cdn", "local", "sefaria-elements.js"),
       "utf8",
@@ -1233,9 +1239,22 @@ async function routeToolkitRequests(
     const request = route.request();
     const url = new URL(request.url());
     if (
-      url.href ===
-      `https://cdn.jsdelivr.net/npm/@sefaria/web-components@${release.version}/dist/browser/sefaria-elements.js`
+      releaseVersion &&
+      Object.values(moduleUrls(releaseVersion)).includes(url.href)
     ) {
+      await route.continue();
+      return;
+    }
+    if (
+      url.href ===
+      moduleUrls(release.version)[
+        "https://sefaria.github.io/sefaria-frontend-toolkit/cdn/alpha/sefaria-elements.js"
+      ]
+    ) {
+      if (releaseVersion)
+        throw new Error(
+          "Production acceptance cannot substitute local JavaScript for a legacy URL.",
+        );
       await route.fulfill({
         body: localScript,
         contentType: "text/javascript",
@@ -1390,6 +1409,8 @@ async function assertText(locator, expected) {
 }
 
 async function assertEqual(actual, expected, label) {
+  if (releaseVersion && typeof expected === "string")
+    expected = rewriteModuleUrls(expected, releaseVersion);
   if (actual !== expected) {
     throw new Error(
       `${label}: expected ${JSON.stringify(expected)}, received ${JSON.stringify(actual)}.`,

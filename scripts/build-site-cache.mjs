@@ -19,6 +19,8 @@ export async function createSiteBuildKey({
     head: exec(root, ["rev-parse", "HEAD"]) ?? "unknown",
     siteBasePath,
     options,
+    releaseVersion: process.env.SITE_RELEASE_VERSION ?? "",
+    candidate: process.env.SITE_CANDIDATE ?? "",
     node: process.version,
     pnpm: readPackageManager(root),
     inputs: await hashFiles(root, files),

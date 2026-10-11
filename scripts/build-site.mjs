@@ -31,6 +31,8 @@ import {
 } from "./build-script-source.mjs";
 import { runNodeScript, runPackageTool } from "./node-tool.mjs";
 import { legacyRedirects } from "../docs/.vitepress/redirects.mjs";
+import { rewriteModuleUrls } from "./site-module-urls.mjs";
+import release from "./npm-documentation-release.json" with { type: "json" };
 
 const root = path.resolve(import.meta.dirname, "..");
 const site = path.join(root, "dist", "site");
@@ -134,6 +136,21 @@ for (const step of createSiteBuildSteps({ skipTypecheck, siteBasePath })) {
       ["scripts/reference/llms.ts", path.join(stagedPublic, "llms.txt")],
       { cwd: root },
     );
+    if (
+      process.env.SITE_RELEASE_VERSION ||
+      process.env.SITE_CANDIDATE === "true"
+    ) {
+      const file = path.join(stagedPublic, "llms.txt");
+      await writeFile(
+        file,
+        rewriteModuleUrls(
+          await readFile(file, "utf8"),
+          process.env.SITE_RELEASE_VERSION || null,
+          siteBasePath,
+          release.version,
+        ),
+      );
+    }
     runPackageTool("vitepress", "vitepress", ["build", "docs"], {
       cwd: root,
       env: { ...process.env, SITE_BASE_PATH: siteBasePath },

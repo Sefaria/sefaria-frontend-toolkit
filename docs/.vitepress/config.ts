@@ -5,6 +5,11 @@ import { defineConfig } from "vitepress";
 import { withMermaid } from "vitepress-plugin-mermaid";
 
 import { normalizeSiteBasePath } from "../../scripts/build-site-plan.mjs";
+import {
+  packageBrowserUrls,
+  siteModuleUrlsPlugin,
+} from "../../scripts/site-module-urls.mjs";
+import release from "../../scripts/npm-documentation-release.json";
 import { removeLeadingProvenanceBlock } from "./provenance";
 
 const repository = "https://github.com/Sefaria/sefaria-frontend-toolkit";
@@ -122,6 +127,23 @@ export default withMermaid(
     },
     vite: {
       publicDir: path.join(repositoryRoot, "dist", "site-public"),
+      define: {
+        "import.meta.env.SEFARIA_BROWSER_MODULE_URLS": JSON.stringify(
+          packageBrowserUrls(
+            release.version,
+            process.env.SITE_CANDIDATE === "true",
+            siteBasePath,
+          ),
+        ),
+      },
+      plugins: [
+        siteModuleUrlsPlugin({
+          version: process.env.SITE_RELEASE_VERSION,
+          candidate: process.env.SITE_CANDIDATE === "true",
+          basePath: siteBasePath,
+          documentedVersion: release.version,
+        }),
+      ],
     },
     markdown: {
       config(markdown) {

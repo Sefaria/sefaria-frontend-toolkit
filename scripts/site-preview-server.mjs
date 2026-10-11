@@ -27,6 +27,7 @@ export async function startSitePreview({
       outDir: outputDirectory,
     },
     preview: {
+      cors: true,
       host: "127.0.0.1",
       port: 0,
       strictPort: true,
