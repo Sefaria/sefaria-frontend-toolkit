@@ -35,6 +35,7 @@ function choose(next: SnippetLanguage) {
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 
 import CodeBlock from "./CodeBlock.vue";
+import { browserModuleUrls } from "./module-urls";
 
 const props = defineProps<{
   snippet: {
@@ -50,10 +51,9 @@ const options = [
   { value: "js", label: "JavaScript" },
 ] as const;
 
-const cdn = "https://sefaria.github.io/sefaria-frontend-toolkit/cdn/alpha";
 const imports = {
-  "@sefaria/api-client": `${cdn}/sefaria-api-client.js`,
-  "@sefaria/text-transform": `${cdn}/sefaria-text-transform.js`,
+  "@sefaria/api-client": browserModuleUrls["@sefaria/api-client"],
+  "@sefaria/text-transform": browserModuleUrls["@sefaria/text-transform"],
 };
 
 type Line = { kind: "log" | "error"; text: string };

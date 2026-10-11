@@ -34,7 +34,10 @@ import {
 } from "./package-publication.mjs";
 import { validatePackedPackage } from "./tarball-consumer-validation.mjs";
 
-const repository = path.resolve(import.meta.dirname, "..");
+const controllerRepository = path.resolve(import.meta.dirname, "..");
+const repository = process.env.RELEASE_REPOSITORY
+  ? path.resolve(process.env.RELEASE_REPOSITORY)
+  : controllerRepository;
 const { AbortSignal } = globalThis;
 const MAX_ASSET_BYTES = 20_000_000;
 const MAX_JSON_BYTES = 200_000;
@@ -864,6 +867,25 @@ export function requireOidcEnvironment(environment = process.env) {
       throw new Error("Permanent or ambient npm credentials are forbidden.");
 }
 
+export function assertReleaseSource({
+  operation,
+  source,
+  head,
+  main,
+  ancestor,
+}) {
+  sourceShaSchema.parse(source);
+  if (
+    !["prepare", "publish", "verify-finalize"].includes(operation) ||
+    head !== source ||
+    !ancestor ||
+    (operation === "prepare" && source !== main)
+  )
+    throw new Error(
+      "Preparation requires current main; recovery requires the explicit checked-out main ancestor.",
+    );
+}
+
 async function main() {
   const operation = process.argv[2];
   const version = releaseVersionSchema.parse(process.env.RELEASE_VERSION);
@@ -896,29 +918,43 @@ async function main() {
       await writeFile(path.join(directory, name), bytes, { flag: "wx" });
     return;
   }
-  if (operation === "assert-source") {
+  if (operation === "assert-history" || operation === "assert-source") {
     if (
       process.env.GITHUB_REF !== "refs/heads/main" ||
       process.env.GITHUB_EVENT_NAME !== "workflow_dispatch" ||
       process.env.GITHUB_REPOSITORY !== REPOSITORY
     )
       throw new Error("Manual main-only Sefaria release required.");
-    if (
-      execFileSync("git", ["rev-parse", "HEAD"], {
-        windowsHide: true,
-        encoding: "utf8",
-      }).trim() !== source ||
-      execFileSync("git", ["rev-parse", "origin/main"], {
-        windowsHide: true,
-        encoding: "utf8",
-      }).trim() !== source
-    )
-      throw new Error(
-        "Release source must be the reviewed current main commit.",
-      );
+    const head =
+      operation === "assert-history"
+        ? source
+        : execFileSync("git", ["rev-parse", "HEAD"], {
+            cwd: repository,
+            windowsHide: true,
+            encoding: "utf8",
+          }).trim();
+    const main = execFileSync("git", ["rev-parse", "origin/main"], {
+      cwd: controllerRepository,
+      windowsHide: true,
+      encoding: "utf8",
+    }).trim();
+    execFileSync(
+      "git",
+      ["merge-base", "--is-ancestor", source, "origin/main"],
+      { windowsHide: true, cwd: controllerRepository },
+    );
+    assertReleaseSource({
+      operation: process.env.RELEASE_OPERATION,
+      source,
+      head,
+      main,
+      ancestor: true,
+    });
+    if (operation === "assert-history") return;
     await readReleaseState(repository, version);
     if (
       execFileSync("git", ["status", "--porcelain"], {
+        cwd: repository,
         windowsHide: true,
         encoding: "utf8",
       }).trim()

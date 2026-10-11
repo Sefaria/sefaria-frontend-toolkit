@@ -9,15 +9,24 @@ import { chromium } from "playwright";
 
 import { createFixtureResponse } from "./site-fixtures.mjs";
 import { startSitePreview } from "./site-preview-server.mjs";
+import { moduleUrls, rewriteModuleUrls } from "./site-module-urls.mjs";
+import release from "./npm-documentation-release.json" with { type: "json" };
 
-const scriptUrl =
+const legacyScriptUrl =
   "https://sefaria.github.io/sefaria-frontend-toolkit/cdn/alpha/sefaria-elements.js";
+const releaseVersion = process.env.SITE_RELEASE_VERSION;
+const scriptUrl = moduleUrls(releaseVersion || release.version)[
+  legacyScriptUrl
+];
+const isScriptUrl = (url) => url === scriptUrl;
 
 function fail(message) {
   throw new Error(`[session 1] ${message}`);
 }
 
 function expectEqual(actual, expected, label) {
+  if (releaseVersion && typeof expected === "string")
+    expected = rewriteModuleUrls(expected, releaseVersion);
   if (actual !== expected) {
     fail(
       `${label}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`,
@@ -55,12 +64,15 @@ export async function runSessionOneSiteChecks({ root, siteBasePath }) {
     path.join(root, "dist", "site", "cdn", "local", "sefaria-elements.js"),
     "utf8",
   );
-  const snippet = (
+  const rawSnippet = (
     await readFile(
       path.join(root, "examples", "site-snippets", editorSnippet),
       "utf8",
     )
   ).trim();
+  const snippet = releaseVersion
+    ? rewriteModuleUrls(rawSnippet, releaseVersion)
+    : rawSnippet;
 
   await withSite(root, siteBasePath, async ({ browser, origin, url }) => {
     const page = await browser.newPage({
@@ -69,12 +81,14 @@ export async function runSessionOneSiteChecks({ root, siteBasePath }) {
     let scriptRequests = 0;
     await page.route("**/*", async (route) => {
       const requestUrl = new URL(route.request().url());
-      if (requestUrl.href === scriptUrl) {
+      if (isScriptUrl(requestUrl.href)) {
         scriptRequests += 1;
-        await route.fulfill({
-          body: localScript,
-          contentType: "text/javascript",
-        });
+        if (releaseVersion) await route.continue();
+        else
+          await route.fulfill({
+            body: localScript,
+            contentType: "text/javascript",
+          });
       } else if (
         requestUrl.origin === origin ||
         ["data:", "about:"].includes(requestUrl.protocol)
@@ -204,23 +218,34 @@ export async function runSessionOneSiteChecks({ root, siteBasePath }) {
 
 /** A text-transform snippet runs offline, only after Run is pressed. */
 async function runSnippetRunChecks({ root, siteBasePath }) {
-  const cdn = "https://sefaria.github.io/sefaria-frontend-toolkit/cdn/alpha/";
+  const modules = new Map([
+    [
+      `https://cdn.jsdelivr.net/npm/@sefaria/api-client@${releaseVersion || release.version}/dist/browser/sefaria-api-client.js`,
+      "sefaria-api-client.js",
+    ],
+    [
+      `https://cdn.jsdelivr.net/npm/@sefaria/text-transform@${releaseVersion || release.version}/dist/browser/sefaria-text-transform.js`,
+      "sefaria-text-transform.js",
+    ],
+  ]);
   await withSite(root, siteBasePath, async ({ browser, origin, url }) => {
     const page = await browser.newPage();
     const served = [];
     await page.route("**/*", async (route) => {
       const requestUrl = new URL(route.request().url());
-      if (requestUrl.href.startsWith(cdn)) {
-        const name = requestUrl.pathname.split("/").pop();
+      const name = modules.get(requestUrl.href);
+      if (name !== undefined) {
         served.push(name);
-        await route.fulfill({
-          body: await readFile(
-            path.join(root, "dist", "site", "cdn", "local", name),
-            "utf8",
-          ),
-          contentType: "text/javascript",
-          headers: { "access-control-allow-origin": "*" },
-        });
+        if (releaseVersion) await route.continue();
+        else
+          await route.fulfill({
+            body: await readFile(
+              path.join(root, "dist", "site", "cdn", "local", name),
+              "utf8",
+            ),
+            contentType: "text/javascript",
+            headers: { "access-control-allow-origin": "*" },
+          });
       } else if (
         requestUrl.origin === origin ||
         ["data:", "about:"].includes(requestUrl.protocol)
@@ -299,7 +324,7 @@ export async function runSessionOneLiveChecks({ root, siteBasePath }) {
     const responses = [];
     page.on("response", (response) => {
       const host = new URL(response.url()).host;
-      if (["sefaria.github.io", "www.sefaria.org"].includes(host)) {
+      if (["www.sefaria.org", new URL(scriptUrl).host].includes(host)) {
         responses.push({
           url: response.url(),
           status: response.status(),
@@ -330,7 +355,7 @@ export async function runSessionOneLiveChecks({ root, siteBasePath }) {
       undefined,
       { timeout: 30_000 },
     );
-    const script = responses.find((entry) => entry.url === scriptUrl);
+    const script = responses.find((entry) => isScriptUrl(entry.url));
     expectEqual(script?.status, 200, "CDN script status from Origin: null");
     const text = responses.find((entry) =>
       entry.url.startsWith("https://www.sefaria.org/api/v3/texts/"),
@@ -368,11 +393,13 @@ async function routeOffline(
   await page.route("**/*", async (route) => {
     const request = route.request();
     const url = new URL(request.url());
-    if (url.href === scriptUrl) {
-      await route.fulfill({
-        body: localScript,
-        contentType: "text/javascript",
-      });
+    if (isScriptUrl(url.href)) {
+      if (releaseVersion) await route.continue();
+      else
+        await route.fulfill({
+          body: localScript,
+          contentType: "text/javascript",
+        });
       return;
     }
     if (url.origin === origin || ["data:", "about:"].includes(url.protocol)) {

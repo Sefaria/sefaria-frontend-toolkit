@@ -25,6 +25,13 @@ test("serves a project-path build from its configured base", async () => {
   try {
     expect(preview.siteUrl).toBe(`${preview.origin}/sefaria-frontend-toolkit/`);
     await preview.waitUntilReady();
+    const response = await fetch(
+      `${preview.siteUrl}cdn/local/sefaria-elements.js`,
+      {
+        headers: { Origin: "null" },
+      },
+    );
+    expect(response.headers.get("access-control-allow-origin")).toBe("*");
   } finally {
     await preview.close();
   }

@@ -172,10 +172,12 @@ describe("exact release and validation workflow contracts", () => {
 
   it("preserves Pages restoration and rejects changed maintenance gates", () => {
     const pages = read("pages.yml");
-    expect(pages).toContain("node scripts/script-source-release.mjs restore");
+    expect(pages).toContain(
+      "node ../control/scripts/script-source-release.mjs restore",
+    );
     for (const candidate of [
       pages.replace(
-        "node scripts/script-source-release.mjs restore",
+        "node ../control/scripts/script-source-release.mjs restore",
         "echo skipped",
       ),
       pages.replace("conclusion == 'success'", "conclusion != 'failure'"),
@@ -183,7 +185,12 @@ describe("exact release and validation workflow contracts", () => {
         "ref: main",
         "ref: ${{ github.event.workflow_run.head_sha }}",
       ),
-      pages.replace(" && pnpm test:site", ""),
+      pages.replace(
+        "node ../control/scripts/pages-promotion.mjs qualify",
+        "echo qualified",
+      ),
+      pages.replace("needs.resolve.outputs.operation != 'candidate'", "true"),
+      pages.replace("ref: ${{ needs.resolve.outputs.source }}", "ref: main"),
     ])
       expect(policy("pages.yml", candidate).length).toBeGreaterThan(0);
     expect(
@@ -195,6 +202,148 @@ describe("exact release and validation workflow contracts", () => {
         ),
       ).length,
     ).toBeGreaterThan(0);
+  });
+
+  it("keeps main candidates separate from current-release correction deployment and pins sources", () => {
+    const jobs = YAML.parse(read("pages.yml")).jobs;
+    expect(jobs.deploy.if).toBe(
+      "${{ needs.resolve.outputs.operation != 'candidate' }}",
+    );
+    expect(jobs.resolve.steps.at(-1).env.PAGES_OPERATION).toContain(
+      "head_branch == 'release/docs' && 'promote' || 'candidate'",
+    );
+    expect(jobs.build.env.DEPLOYED_RUN_ID).toBe(
+      "${{ needs.resolve.outputs.baselineRunId }}",
+    );
+    expect(jobs.resolve.outputs.baselineRunId).toBe(
+      "${{ steps.select.outputs.baselineRunId }}",
+    );
+    const checkouts = jobs.build.steps.filter(
+      (step: { uses?: string }) => step.uses === "actions/checkout@v4",
+    );
+    expect(
+      checkouts.map((step: { with: { ref: string } }) => step.with.ref),
+    ).toEqual([
+      "${{ needs.resolve.outputs.controller }}",
+      "${{ needs.resolve.outputs.source }}",
+    ]);
+    const steps = jobs.build.steps;
+    const qualify = steps.findIndex((step: { run?: string }) =>
+      step.run?.endsWith("pages-promotion.mjs qualify"),
+    );
+    const upload = steps.findIndex(
+      (step: { uses?: string }) =>
+        step.uses === "actions/upload-pages-artifact@v5",
+    );
+    expect(qualify).toBeGreaterThan(0);
+    expect(upload).toBeGreaterThan(qualify);
+    const releaseJobs = YAML.parse(release).jobs;
+    expect(releaseJobs.guard.steps[0].with.ref).toBe("main");
+    const history = releaseJobs.guard.steps.findIndex(
+      (step: { run?: string }) =>
+        step.run?.includes("npm-release.mjs assert-history"),
+    );
+    const sourceCheckout = releaseJobs.guard.steps.findIndex(
+      (step: { with?: { ref?: string } }) =>
+        step.with?.ref === "${{ inputs.source }}",
+    );
+    expect(history).toBeGreaterThan(0);
+    expect(sourceCheckout).toBeGreaterThan(history);
+    for (const name of ["draft", "publish", "verify", "finalize"])
+      expect(
+        releaseJobs[name].steps.find(
+          (step: { uses?: string }) => step.uses === "actions/checkout@v4",
+        )?.with?.ref,
+      ).toBe("${{ needs.guard.outputs.controller }}");
+    expect(YAML.parse(read("pages.yml")).concurrency.group).toContain(
+      "pages-candidate-{0}",
+    );
+    expect(YAML.parse(ci).on).toEqual({
+      pull_request: { branches: ["main", "release/docs"] },
+      push: { branches: ["main", "release/docs"] },
+    });
+
+    expect(jobs.resolve.steps.at(-1).env.CURRENT_RELEASE_CORRECTION).toContain(
+      "head_branch == 'release/docs'",
+    );
+    expect(
+      jobs.build.steps.find((step: { run?: string }) =>
+        step.run?.endsWith("pages-promotion.mjs receipt"),
+      ).env.GITHUB_TOKEN,
+    ).toBe("${{ github.token }}");
+    expect(jobs.build.permissions.deployments).toBe("read");
+    expect(jobs.build.steps).toContainEqual({
+      run: "pnpm exec playwright install --with-deps chromium firefox webkit",
+      "working-directory": "control",
+    });
+  });
+
+  it("admits only authorized production triggers to the shared Pages concurrency group", () => {
+    const expression = YAML.parse(read("pages.yml")).concurrency.group;
+    const group = new Function(
+      "github",
+      "inputs",
+      "format",
+      `return ${expression.slice(3, -2)};`,
+    );
+    const github = {
+      ref: "refs/heads/main",
+      event_name: "workflow_run",
+      repository: "Sefaria/sefaria-frontend-toolkit",
+      run_id: "123",
+      event: {
+        workflow_run: {
+          name: "CI",
+          event: "push",
+          conclusion: "success",
+          head_branch: "release/docs",
+          head_repository: {
+            full_name: "Sefaria/sefaria-frontend-toolkit",
+          },
+        },
+      },
+    };
+    const select = (event = github, operation = "promote") =>
+      group(event, { operation }, (template: string, id: string) =>
+        template.replace("{0}", id),
+      );
+    const run = github.event.workflow_run;
+    const withRun = (changes: Partial<typeof run>) => ({
+      ...github,
+      event: { workflow_run: { ...run, ...changes } },
+    });
+    const candidate = `pages-candidate-${github.run_id}`;
+    expect(select()).toBe("github-pages");
+    expect(select({ ...github, event_name: "workflow_dispatch" })).toBe(
+      "github-pages",
+    );
+    expect(
+      select({
+        ...github,
+        ref: "refs/heads/feature",
+        event_name: "workflow_dispatch",
+      }),
+    ).toBe(candidate);
+    expect(
+      select({ ...github, event_name: "workflow_dispatch" }, "candidate"),
+    ).toBe(candidate);
+    for (const changes of [
+      { event: "pull_request" },
+      { head_repository: { full_name: "fork/toolkit" } },
+      { head_branch: "main" },
+      { conclusion: "failure" },
+    ])
+      expect(select(withRun(changes))).toBe(candidate);
+    expect(
+      select(
+        withRun({
+          name: "Retire script version",
+          event: "workflow_dispatch",
+          head_branch: "main",
+        }),
+      ),
+    ).toBe("github-pages");
+    expect(select(withRun({ name: "Retire script version" }))).toBe(candidate);
   });
 
   it("keeps Copilot setup and OpenAPI drift capabilities narrowly scoped", () => {

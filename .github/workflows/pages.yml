@@ -2,72 +2,162 @@ name: Pages
 
 on:
   workflow_dispatch:
+    inputs:
+      operation:
+        description: Build a candidate, promote verified documentation, or maintain the deployed baseline
+        required: true
+        default: candidate
+        type: choice
+        options: [candidate, promote, maintain]
+      source:
+        description: Full current release/docs tip SHA (promotion only)
+        type: string
+      version:
+        description: Exact verified npm version with public original handoff (promotion only)
+        type: string
+      release_source:
+        description: Full original main-history release source SHA (promotion only)
+        type: string
   workflow_run:
-    workflows:
-      - CI
-      - Retire script version
-    types:
-      - completed
-    branches:
-      - main
+    workflows: [CI, Retire script version]
+    types: [completed]
+    branches: [main, release/docs]
 
 permissions:
   contents: read
 
 concurrency:
-  group: github-pages
+  group: ${{ github.ref == 'refs/heads/main' && ((github.event_name == 'workflow_dispatch' && inputs.operation != 'candidate') || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository && ((github.event.workflow_run.name == 'CI' && github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'release/docs') || (github.event.workflow_run.name == 'Retire script version' && github.event.workflow_run.event == 'workflow_dispatch' && github.event.workflow_run.head_branch == 'main')))) && 'github-pages' || format('pages-candidate-{0}', github.run_id) }}
   cancel-in-progress: false
 
 jobs:
-  build:
-    name: build Pages artifact
-    timeout-minutes: 60
-    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository && ((github.event.workflow_run.name == 'CI' && github.event.workflow_run.event == 'push') || (github.event.workflow_run.name == 'Retire script version' && github.event.workflow_run.event == 'workflow_dispatch')))) }}
+  resolve:
+    if: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_repository.full_name == github.repository && ((github.event.workflow_run.name == 'CI' && github.event.workflow_run.event == 'push' && (github.event.workflow_run.head_branch == 'main' || github.event.workflow_run.head_branch == 'release/docs')) || (github.event.workflow_run.name == 'Retire script version' && github.event.workflow_run.event == 'workflow_dispatch' && github.event.workflow_run.head_branch == 'main')))) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
-      pages: read
-    runs-on: ubuntu-latest
-    env:
-      SITE_BASE_PATH: /sefaria-frontend-toolkit/
+      deployments: read
+    outputs:
+      operation: ${{ steps.select.outputs.operation }}
+      source: ${{ steps.select.outputs.source }}
+      version: ${{ steps.select.outputs.version }}
+      releaseSource: ${{ steps.select.outputs.releaseSource }}
+      controller: ${{ steps.select.outputs.controller }}
+      baselineRunId: ${{ steps.select.outputs.baselineRunId }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: main
+          fetch-depth: 0
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22.14.0
           cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - id: select
+        run: |
+          echo "operation=$PAGES_OPERATION" >> "$GITHUB_OUTPUT"
+          echo "controller=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          node scripts/pages-promotion.mjs resolve
+        env:
+          PAGES_OPERATION: ${{ github.event_name == 'workflow_dispatch' && inputs.operation || (github.event.workflow_run.name == 'Retire script version' && 'maintain' || (github.event.workflow_run.head_branch == 'release/docs' && 'promote' || 'candidate')) }}
+          CURRENT_RELEASE_CORRECTION: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.name == 'CI' && github.event.workflow_run.head_branch == 'release/docs' }}
+          CANDIDATE_SOURCE: ${{ github.event.workflow_run.head_sha || github.sha }}
+          DOCS_SOURCE: ${{ inputs.source }}
+          RELEASE_VERSION: ${{ inputs.version }}
+          RELEASE_SOURCE: ${{ inputs.release_source }}
+          GITHUB_TOKEN: ${{ github.token }}
+
+  build:
+    needs: resolve
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    permissions:
+      contents: read
+      pages: read
+      deployments: read
+    defaults:
+      run:
+        working-directory: candidate
+    env:
+      SITE_BASE_PATH: /sefaria-frontend-toolkit/
+      DOCS_SOURCE: ${{ needs.resolve.outputs.source }}
+      RELEASE_VERSION: ${{ needs.resolve.outputs.version }}
+      RELEASE_SOURCE: ${{ needs.resolve.outputs.releaseSource }}
+      PAGES_OPERATION: ${{ needs.resolve.outputs.operation }}
+      DEPLOYED_RUN_ID: ${{ needs.resolve.outputs.baselineRunId }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve.outputs.controller }}
+          path: control
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.resolve.outputs.source }}
+          path: candidate
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: control/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.14.0
+          cache: pnpm
+          cache-dependency-path: |
+            control/pnpm-lock.yaml
+            candidate/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+        working-directory: control
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('candidate/pnpm-lock.yaml', 'control/pnpm-lock.yaml') }}
       - run: pnpm setup:agent
-      - name: Reuse CI validation of this commit
-        id: ci
-        run: node scripts/pages-validation.mjs
+      - run: pnpm exec playwright install --with-deps chromium firefox webkit
+        working-directory: control
+      - run: npm install --global npm@11.5.2 --ignore-scripts
+      - run: pnpm check
+      - if: ${{ needs.resolve.outputs.version != '' || needs.resolve.outputs.operation == 'candidate' }}
+        run: pnpm build:site:bundles
         env:
-          EVENT_NAME: ${{ github.event_name }}
-          WORKFLOW_NAME: ${{ github.event.workflow_run.name }}
-          WORKFLOW_EVENT: ${{ github.event.workflow_run.event }}
-          WORKFLOW_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
-          WORKFLOW_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
-      - if: ${{ steps.ci.outputs.validated != 'true' }}
-        run: pnpm check
-      - if: ${{ steps.ci.outputs.validated == 'true' }}
-        run: pnpm build && pnpm build:site:bundles && pnpm test:site
-      - run: node scripts/script-source-release.mjs restore
+          SITE_RELEASE_VERSION: ${{ needs.resolve.outputs.version }}
+          SITE_CANDIDATE: ${{ needs.resolve.outputs.operation == 'candidate' }}
+      - if: ${{ needs.resolve.outputs.version != '' }}
+        run: node ../control/scripts/pages-promotion.mjs qualify
         env:
           GITHUB_TOKEN: ${{ github.token }}
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v5
+      - if: ${{ needs.resolve.outputs.operation == 'candidate' }}
+        run: node ../control/scripts/pages-promotion.mjs preview
+      - if: ${{ needs.resolve.outputs.operation == 'candidate' }}
+        uses: actions/upload-artifact@v4
         with:
-          path: dist/site
+          name: documentation-candidate-${{ needs.resolve.outputs.source }}
+          path: candidate/dist/site
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+      - if: ${{ needs.resolve.outputs.operation != 'candidate' }}
+        run: node ../control/scripts/pages-promotion.mjs receipt
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - if: ${{ needs.resolve.outputs.operation != 'candidate' }}
+        run: node ../control/scripts/script-source-release.mjs restore
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - if: ${{ needs.resolve.outputs.operation != 'candidate' }}
+        uses: actions/configure-pages@v5
+      - if: ${{ needs.resolve.outputs.operation != 'candidate' }}
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: candidate/dist/site
 
   deploy:
-    name: deploy Pages
+    needs: [resolve, build]
+    if: ${{ needs.resolve.outputs.operation != 'candidate' }}
+    runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: build
     permissions:
       contents: read
       pages: write
@@ -75,8 +165,6 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
-      - name: Deploy GitHub Pages
-        id: deployment
+      - id: deployment
         uses: actions/deploy-pages@v5

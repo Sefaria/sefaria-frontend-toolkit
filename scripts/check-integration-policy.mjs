@@ -63,7 +63,6 @@ const issues = [
         ]),
       ),
     ),
-    manifests["packages/client/package.json"].version,
   ),
   ...(await validateMarkdownLinks(root, journeyFiles)),
 ];

@@ -10,6 +10,10 @@ import { readSiteBasePath } from "./build-site-plan.mjs";
 import { legacyRedirects } from "../docs/.vitepress/redirects.mjs";
 import { createFixtureResponse } from "./site-fixtures.mjs";
 import { startSitePreview } from "./site-preview-server.mjs";
+import { moduleUrls, rewriteModuleUrls } from "./site-module-urls.mjs";
+import release from "./npm-documentation-release.json" with { type: "json" };
+
+const releaseVersion = process.env.SITE_RELEASE_VERSION;
 
 const root = path.resolve(import.meta.dirname, "..");
 const siteBasePath = readSiteBasePath(process.argv.slice(2));
@@ -33,7 +37,7 @@ try {
         "utf8",
       ),
     );
-    const snippet = await readFile(
+    const snippetSource = await readFile(
       path.join(
         root,
         "examples",
@@ -42,6 +46,9 @@ try {
       ),
       "utf8",
     );
+    const snippet = releaseVersion
+      ? rewriteModuleUrls(snippetSource, releaseVersion)
+      : snippetSource;
     const localScript = await readFile(
       path.join(root, "dist", "site", "cdn", "local", "sefaria-elements.js"),
       "utf8",
@@ -381,6 +388,30 @@ try {
         ?.textContent?.includes("You have been told"),
     );
     await assertText(page.locator("#hero-panel-text"), "You have been told");
+    await assertEqual(
+      await page.locator(".hero-install").count(),
+      0,
+      "hero install is removed",
+    );
+    await assertEqual(
+      await page
+        .locator(".hero-example")
+        .getByText("npm install", { exact: false })
+        .count(),
+      0,
+      "demo tabs have no repeated installation blocks",
+    );
+    await assertEqual(
+      JSON.stringify(
+        await page.locator(".VPFeature .feature-package").allTextContents(),
+      ),
+      JSON.stringify([
+        "@sefaria/web-components",
+        "@sefaria/api-client",
+        "@sefaria/text-transform",
+      ]),
+      "feature cards identify their packages",
+    );
     const labels = await page
       .locator("#hero-panel-text figcaption")
       .allTextContents();
@@ -529,7 +560,7 @@ try {
     await assertText(page.locator("body"), "use a plain link to Sefaria");
     await assertText(
       page.locator("body"),
-      "The alpha address always loads the newest build.",
+      `The script pins npm release ${release.version} through jsDelivr.`,
     );
     await assertEqual(
       (await page.locator(".vp-doc code", { hasText: "alpha" }).count()) > 0,
@@ -1208,9 +1239,22 @@ async function routeToolkitRequests(
     const request = route.request();
     const url = new URL(request.url());
     if (
-      url.href ===
-      "https://sefaria.github.io/sefaria-frontend-toolkit/cdn/alpha/sefaria-elements.js"
+      releaseVersion &&
+      Object.values(moduleUrls(releaseVersion)).includes(url.href)
     ) {
+      await route.continue();
+      return;
+    }
+    if (
+      url.href ===
+      moduleUrls(release.version)[
+        "https://sefaria.github.io/sefaria-frontend-toolkit/cdn/alpha/sefaria-elements.js"
+      ]
+    ) {
+      if (releaseVersion)
+        throw new Error(
+          "Production acceptance cannot substitute local JavaScript for a legacy URL.",
+        );
       await route.fulfill({
         body: localScript,
         contentType: "text/javascript",
@@ -1365,6 +1409,8 @@ async function assertText(locator, expected) {
 }
 
 async function assertEqual(actual, expected, label) {
+  if (releaseVersion && typeof expected === "string")
+    expected = rewriteModuleUrls(expected, releaseVersion);
   if (actual !== expected) {
     throw new Error(
       `${label}: expected ${JSON.stringify(expected)}, received ${JSON.stringify(actual)}.`,

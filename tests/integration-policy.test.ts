@@ -106,56 +106,21 @@ describe("Wave 4 integration policy", () => {
     expect(
       pagesWorkflow.indexOf("actions/upload-pages-artifact@v5"),
     ).toBeLessThan(pagesWorkflow.indexOf("actions/deploy-pages@v5"));
-    expect(
-      validateWorkflowPolicy({
-        "pages.yml": pagesWorkflow.replace(
-          "name: build Pages artifact",
-          "name: assemble site",
-        ),
-      }),
-    ).toEqual([]);
-    expect(
-      validateWorkflowPolicy({
-        "pages.yml": pagesWorkflow.replace(
-          "path: dist/site",
-          "path: dist/site-public",
-        ),
-      }),
-    ).toContain("Pages build/upload/deploy ordering is incorrect in pages.yml");
-    expect(
-      validateWorkflowPolicy({
-        "pages.yml": pagesWorkflow.replace(
-          "actions/configure-pages@v5",
-          "example/configure-pages@v1",
-        ),
-      }),
-    ).toContain("unapproved Pages action in pages.yml");
-    expect(
-      validateWorkflowPolicy({
-        "pages.yml": `${pagesWorkflow}
-  extra:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo extra
-`,
-      }),
-    ).toContain("Pages workflow jobs are incorrect in pages.yml");
-    expect(
-      validateWorkflowPolicy({
-        "pages.yml": pagesWorkflow.replace(
-          "      - uses: actions/configure-pages@v5",
-          "      - run: echo injected\n      - uses: actions/configure-pages@v5",
-        ),
-      }),
-    ).toContain("Pages workflow steps are incorrect in pages.yml");
-    expect(
-      validateWorkflowPolicy({
-        "pages.yml": pagesWorkflow.replace(
-          "      - name: Deploy GitHub Pages",
-          "      - run: echo injected\n      - name: Deploy GitHub Pages",
-        ),
-      }),
-    ).toContain("Pages workflow steps are incorrect in pages.yml");
+    for (const [before, after] of [
+      ["path: candidate/dist/site", "path: candidate/dist/site-public"],
+      ["actions/configure-pages@v5", "example/configure-pages@v1"],
+      ["node ../control/scripts/pages-promotion.mjs qualify", "echo unchecked"],
+      [
+        "      - id: deployment",
+        "      - run: echo injected\n      - id: deployment",
+      ],
+    ]) {
+      const mutated = pagesWorkflow.replace(before, after);
+      expect(mutated).not.toBe(pagesWorkflow);
+      expect(
+        validateWorkflowPolicy({ "pages.yml": mutated }).join("\n"),
+      ).toContain("Pages workflow differs from its pinned source");
+    }
 
     const unsafe = workflow
       .replace(
@@ -236,13 +201,10 @@ describe("Wave 4 integration policy", () => {
       }),
     ).toEqual([]);
     expect(
-      validateDocumentationClaims(
-        {
-          "docs/help/install-and-status.md":
-            'Public npm publication of `0.1.0-alpha.0` is pending qualification. This is planned installation guidance.\nversion="0.1.0-alpha.0"\nnpm install "@sefaria/api-client@$version" "@sefaria/text-transform@$version" "@sefaria/web-components@$version"',
-        },
-        "0.1.0-alpha.0",
-      ),
+      validateDocumentationClaims({
+        "docs/help/install-and-status.md":
+          "npm install @sefaria/api-client@0.1.0-alpha.0 @sefaria/text-transform@0.1.0-alpha.0 @sefaria/web-components@0.1.0-alpha.0\nnpm install @sefaria/web-components@alpha",
+      }),
     ).toEqual([]);
     expect(
       validateDocumentationClaims({
@@ -270,37 +232,16 @@ describe("Wave 4 integration policy", () => {
     ).toEqual(["unsupported deployment claim: README.md"]);
   });
 
-  it.each(["0.1.0-alpha.0", "0.1.1-alpha.0", "0.1.1"])(
-    "allows planned installation only for the supplied manifest version %s",
-    (version) => {
-      const filename = "docs/help/install-and-status.md";
-      const source = `Public npm publication of \`${version}\` is pending qualification. This is planned installation guidance.
-version="${version}"
-npm install "@sefaria/api-client@$version" "@sefaria/text-transform@$version" "@sefaria/web-components@$version"`;
-      expect(
-        validateDocumentationClaims({ [filename]: source }, version),
-      ).toEqual([]);
-      for (const changed of [
-        source.replace(`version="${version}"`, 'version="9.9.9"'),
-        source.replace(`\`${version}\``, "`9.9.9`"),
-        source.replace("is pending qualification", "is published"),
-        source.replace(
-          "planned installation guidance",
-          "installation guidance",
-        ),
-        source.replace(' "@sefaria/text-transform@$version"', ""),
-        `${source}\nnpm install @sefaria/api-client`,
-      ]) {
-        expect(
-          validateDocumentationClaims({ [filename]: changed }, version),
-        ).toContain(`unsupported registry installation command: ${filename}`);
-      }
-      expect(validateDocumentationClaims({ [filename]: source })).toContain(
-        `unsupported registry installation command: ${filename}`,
-      );
-      expect(
-        validateDocumentationClaims({ "README.md": source }, version),
-      ).toContain("unsupported registry installation command: README.md");
-    },
-  );
+  it.each([
+    "npm install @sefaria/model@0.1.0-alpha.0",
+    "npm install @sefaria/api-client",
+    "npm install @sefaria/api-client@latest",
+    "npm install @sefaria/api-client@0.1.0-alpha.99",
+    "npm install @sefaria/api-client@0.1.0-alpha.0 --registry=https://npm.pkg.github.com",
+    "npm install @sefaria/api-client@0.1.0-alpha.0 && npm publish",
+  ])("rejects unsupported post-launch installation: %s", (command) => {
+    expect(validateDocumentationClaims({ "README.md": command })).toEqual([
+      "unsupported registry installation command: README.md",
+    ]);
+  });
 });
