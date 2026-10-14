@@ -548,6 +548,13 @@
   background: var(--vp-c-bg-soft);
 }
 
+.vp-doc .hero-example h2,
+.vp-doc .snippet-demo h2 {
+  margin-top: 0;
+  border-top: 0;
+  padding-top: 0;
+}
+
 .hero-example__heading h2,
 .hero-example__eyebrow {
   margin: 0;
