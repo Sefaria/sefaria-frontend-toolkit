@@ -35,7 +35,7 @@ test("non-DOM Text Segment supports the same preferred-language request", async 
   translated.actualLanguage = "fr";
   const request = {
     tref: "Micah 6:8",
-    version: { translationLanguage: "french" },
+    version: { language: "french" },
   };
   const client = createSefariaClient({
     cache: false,
@@ -82,6 +82,34 @@ test("advertised but uncaptured preferred text is not an unavailable language", 
   value.warnings = [{ french: { warning_code: 102, message: "Unavailable" } }];
   expect(() => needsTranslationFallback(value, "french")).toThrow("/warnings");
 });
+
+test.each(["none", "default"] as const)(
+  "Text Segment rejects uncaptured advertised text with fallback %s",
+  async (translationFallback) => {
+    const value = capture();
+    value.available_versions.push({
+      ...value.available_versions[1]!,
+      languageFamilyName: "french",
+      actualLanguage: "fr",
+    });
+    const request = {
+      tref: value.ref,
+      version: { language: "french" },
+      translationFallback,
+    };
+    const client = createSefariaClient({
+      cache: false,
+      fetch: async () => Response.json(value),
+    });
+
+    expect(() => createTextSegmentViewModel(value, request)).toThrow(
+      /^\/versions:/,
+    );
+    await expect(loadTextSegmentViewModel(request, client)).rejects.toThrow(
+      /^\/versions:/,
+    );
+  },
+);
 
 test("exact edition mismatch never selects another family's same-named edition", () => {
   const value = capture();
@@ -172,7 +200,7 @@ test("disabled fallback still rejects contradictory missing-language evidence", 
   expect(() =>
     createTextSegmentViewModel(value, {
       tref: "Micah 6:8",
-      version: { translationLanguage: "english" },
+      version: { language: "english" },
       translationFallback: "none",
     }),
   ).toThrow("/warnings");
