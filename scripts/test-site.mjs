@@ -781,29 +781,32 @@ async function assertPromotionEditorActivation(engine) {
       return editor && globalThis.getComputedStyle(editor).display === "grid";
     });
     await page.addStyleTag({ content: "html { overflow-anchor: none; }" });
-    const activation = activatePromotionEditor(page);
-    await page.waitForFunction(() => {
-      const rect = globalThis.document
-        .querySelector(".live-editor")
-        .getBoundingClientRect();
-      return rect.top < globalThis.innerHeight && rect.bottom > 0;
-    });
-    const shiftedTop = await page.evaluate(() => {
-      const style = globalThis.document.createElement("style");
-      style.textContent =
-        "body::before { content: ''; display: block; height: 2000px; }";
-      globalThis.document.head.append(style);
-      return globalThis.document
-        .querySelector(".live-editor")
-        .getBoundingClientRect().top;
-    });
-    await assertEqual(
-      shiftedTop > page.viewportSize().height,
-      true,
-      "layout shift moves the unhydrated editor below the viewport",
-    );
-    resumeHydration();
-    const editor = await activation;
+    const [editor] = await Promise.all([
+      activatePromotionEditor(page),
+      (async () => {
+        await page.waitForFunction(() => {
+          const rect = globalThis.document
+            .querySelector(".live-editor")
+            .getBoundingClientRect();
+          return rect.top < globalThis.innerHeight && rect.bottom > 0;
+        });
+        const shiftedTop = await page.evaluate(() => {
+          const style = globalThis.document.createElement("style");
+          style.textContent =
+            "body::before { content: ''; display: block; height: 2000px; }";
+          globalThis.document.head.append(style);
+          return globalThis.document
+            .querySelector(".live-editor")
+            .getBoundingClientRect().top;
+        });
+        await assertEqual(
+          shiftedTop > page.viewportSize().height,
+          true,
+          "layout shift moves the unhydrated editor below the viewport",
+        );
+        resumeHydration();
+      })(),
+    ]);
     const child = await (
       await editor.locator("iframe").elementHandle()
     ).contentFrame();
