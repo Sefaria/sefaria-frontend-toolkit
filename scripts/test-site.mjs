@@ -12,6 +12,11 @@ import { createFixtureResponse } from "./site-fixtures.mjs";
 import { startSitePreview } from "./site-preview-server.mjs";
 import { moduleUrls, rewriteModuleUrls } from "./site-module-urls.mjs";
 import release from "./npm-documentation-release.json" with { type: "json" };
+import {
+  activatePromotionEditor,
+  findPromotionRoutes,
+  waitForPromotionRuntime,
+} from "./test-pages-promotion.mjs";
 
 const releaseVersion = process.env.SITE_RELEASE_VERSION;
 
@@ -27,6 +32,7 @@ try {
   await previewServer.waitUntilReady();
   for (const engine of [chromium, firefox, webkit]) {
     await assertDocumentationNotice(engine);
+    await assertPromotionEditorActivation(engine);
   }
   const browser = await chromium.launch({ headless: true });
   try {
@@ -724,6 +730,91 @@ try {
   }
 } finally {
   await previewServer.close();
+}
+
+async function assertPromotionEditorActivation(engine) {
+  const routes = await findPromotionRoutes(path.join(root, "dist", "site"));
+  const browser = await engine.launch();
+  let resumeHydration;
+  const hydration = new Promise((resolve) => {
+    resumeHydration = resolve;
+  });
+  let resumeRuntime;
+  const runtime = new Promise((resolve) => {
+    resumeRuntime = resolve;
+  });
+  const elementsUrl = moduleUrls(releaseVersion || release.version)[
+    "https://sefaria.github.io/sefaria-frontend-toolkit/cdn/alpha/sefaria-elements.js"
+  ];
+  try {
+    const page = await browser.newPage();
+    await page.route("**/*", async (route) => {
+      const requestUrl = new URL(route.request().url());
+      if (requestUrl.href === elementsUrl) {
+        await runtime;
+        if (releaseVersion) await route.continue();
+        else
+          await route.fulfill({
+            path: path.join(
+              root,
+              "dist",
+              "site",
+              "cdn",
+              "local",
+              "sefaria-elements.js",
+            ),
+            contentType: "text/javascript",
+          });
+        return;
+      }
+      if (requestUrl.origin !== origin) {
+        await route.abort("blockedbyclient");
+        return;
+      }
+      if (/\/assets\/app\.[^/]+\.js$/u.test(requestUrl.pathname))
+        await hydration;
+      await route.continue();
+    });
+    await page.goto(`${siteUrl}${routes.editor}`, { waitUntil: "commit" });
+    await page.waitForFunction(() => {
+      const editor = globalThis.document.querySelector(".live-editor");
+      return editor && globalThis.getComputedStyle(editor).display === "grid";
+    });
+    await page.addStyleTag({ content: "html { overflow-anchor: none; }" });
+    const activation = activatePromotionEditor(page);
+    await page.waitForFunction(() => {
+      const rect = globalThis.document
+        .querySelector(".live-editor")
+        .getBoundingClientRect();
+      return rect.top < globalThis.innerHeight && rect.bottom > 0;
+    });
+    const shiftedTop = await page.evaluate(() => {
+      const style = globalThis.document.createElement("style");
+      style.textContent =
+        "body::before { content: ''; display: block; height: 2000px; }";
+      globalThis.document.head.append(style);
+      return globalThis.document
+        .querySelector(".live-editor")
+        .getBoundingClientRect().top;
+    });
+    await assertEqual(
+      shiftedTop > page.viewportSize().height,
+      true,
+      "layout shift moves the unhydrated editor below the viewport",
+    );
+    resumeHydration();
+    const editor = await activation;
+    const child = await (
+      await editor.locator("iframe").elementHandle()
+    ).contentFrame();
+    await page.evaluate(() => globalThis.scrollTo(0, 0));
+    resumeRuntime();
+    await waitForPromotionRuntime(child);
+  } finally {
+    resumeHydration();
+    resumeRuntime();
+    await browser.close();
+  }
 }
 
 async function assertDocumentationNotice(engine) {

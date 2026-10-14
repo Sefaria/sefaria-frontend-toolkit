@@ -26,6 +26,44 @@ export async function findPromotionRoutes(directory) {
   );
 }
 
+export async function activatePromotionEditor(page) {
+  const editor = page.locator(".live-editor").first();
+  await editor.scrollIntoViewIfNeeded();
+  await editor.locator("iframe").evaluate((element) => {
+    if (element.getAttribute("sandbox") !== "allow-scripts")
+      throw new Error("Selected editor is not an opaque scripts-only sandbox.");
+  });
+  // Mermaid can shift the editor offscreen after the initial scroll, before its
+  // IntersectionObserver sets srcdoc. Keep it in view until lazy activation;
+  // scrolling alone does not prove that the iframe has started.
+  await page.waitForFunction(() => {
+    const frame = globalThis.document.querySelector(".live-editor__frame");
+    if (!frame) return false;
+    if (frame.hasAttribute("srcdoc")) return true;
+    frame.scrollIntoView({ block: "center", behavior: "instant" });
+    return false;
+  });
+  await page
+    .frameLocator(".live-editor__frame")
+    .first()
+    .locator("script[type=module]")
+    .first()
+    .waitFor({ state: "attached" });
+  return editor;
+}
+
+export async function waitForPromotionRuntime(frame) {
+  // Playwright defaults to requestAnimationFrame polling, which can stop in an
+  // offscreen iframe even after the module registers its custom elements.
+  // Poll on a timer instead; registration is still required within the existing
+  // timeout. This is not a fixed sleep or a retry of the module request.
+  await frame.waitForFunction(
+    () => globalThis.customElements.get("sefaria-text-segment") !== undefined,
+    null,
+    { polling: 100 },
+  );
+}
+
 export async function testPromotionSite({ root, version, basePath }) {
   const routes = await findPromotionRoutes(path.join(root, "dist", "site"));
   const urls = packageBrowserUrls(version, false);
@@ -73,19 +111,7 @@ export async function testPromotionSite({ root, version, basePath }) {
           else await route.abort("blockedbyclient");
         });
         await page.goto(`${server.siteUrl}${routes.editor}`);
-        const editor = page.locator(".live-editor").first();
-        await editor.scrollIntoViewIfNeeded();
-        await editor.locator("iframe").evaluate((element) => {
-          if (element.getAttribute("sandbox") !== "allow-scripts")
-            throw new Error(
-              "Selected editor is not an opaque scripts-only sandbox.",
-            );
-        });
-        const frame = page.frameLocator(".live-editor__frame").first();
-        await frame
-          .locator("script[type=module]")
-          .first()
-          .waitFor({ state: "attached" });
+        const editor = await activatePromotionEditor(page);
         await page.waitForFunction(
           () =>
             globalThis.document.querySelector(".live-editor__frame")?.style
@@ -94,10 +120,7 @@ export async function testPromotionSite({ root, version, basePath }) {
         const child = await (
           await editor.locator("iframe").elementHandle()
         ).contentFrame();
-        await child.waitForFunction(
-          () =>
-            globalThis.customElements.get("sefaria-text-segment") !== undefined,
-        );
+        await waitForPromotionRuntime(child);
         assert(
           modules.has(urls["@sefaria/web-components"]),
           "Selected editor did not request the qualified elements URL.",
