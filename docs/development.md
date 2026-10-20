@@ -336,7 +336,7 @@ It then applies the local overlay, creates the corrected document in temporary s
 pnpm openapi:generate
 ```
 
-The operation validates the checksum and co-located overlay guards, applies `openapi/overlay.yaml` through `openapi-format` 1.33.6, extracts eight reviewed Core GET/POST operations and recursive references into temporary storage, and runs `@hey-api/openapi-ts` 0.99.0.
+The operation validates the checksum and co-located overlay guards, applies `openapi/overlay.yaml` through `openapi-format` 1.33.6, retains all 60 corrected API operations, and runs `@hey-api/openapi-ts` 0.99.0 on the complete document in temporary storage. A separate compatibility qualification has fixture coverage for eight Core operations; that set does not limit SDK generation.
 
 The generator configures a deterministic Zod object resolver for every retained `additionalProperties: false` schema. It also maps the explicitly typed OpenAPI 3.0 null-only branches to `z.null()` and applies the `minProperties: 1` warning-record correction that Hey API 0.99 does not emit correctly.
 

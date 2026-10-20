@@ -95,7 +95,7 @@ Do not add an OpenAPI correction before source review or a runtime contract fail
 
 ## Keep source bounded and declarative
 
-Every public element can accept `sref` and component-specific raw `data`. For the five non-Reader elements, defined `data` is authoritative and must suppress source, including when it is validly empty or invalid.
+All five public elements accept `sref`. Text Segment, Bilingual Segment, and Source Card also accept component-specific raw `data`. For these three elements, defined `data` is authoritative and must suppress source, including when it is validly empty or invalid. Reader and Connections Panel use tagged source loaders for host-provided data.
 
 Elements may accept only the documented tagged data source choice. Do not expose `fetch`, a base URL, arbitrary request functions, a host object, or a public prepared rendering model.
 

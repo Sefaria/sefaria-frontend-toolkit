@@ -87,7 +87,7 @@ The Reader asks for the text of its root reference. It may also ask for the surr
 
 <CodeLanguageToggle :snippet="snippets['local-reader-loader']" />
 
-This example serves only `Micah 6:8`. The Reader loads without any request to Sefaria. The only request is your own `/data/micah-6-8.json`. Navigating to another reference fails with the error the custom loader throws.
+This example needs two local JSON files. Put the `Micah 6:8` response in `/data/micah-6-8.json` and the `Micah 6` response in `/data/micah-6.json`. Reader requests the verse and its surrounding section during initial load, then uses the matching file for each reference. The browser test stubs both files and verifies that the Reader makes no request to Sefaria. This example returns no links for these two references.
 
 #### Example: a Reader inside AI chat
 

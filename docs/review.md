@@ -107,8 +107,9 @@ Review the initial and expanded corrections for:
 
 ## Declarative component inputs and source
 
-- [ ] All six public elements accept `sref` and support standalone loading.
-- [ ] The five non-Reader elements accept component-specific raw `data`.
+- [ ] All five public elements accept `sref` and support standalone loading.
+- [ ] Text Segment, Bilingual Segment, and Source Card accept component-specific raw `data`.
+- [ ] Reader and Connections Panel use tagged source loaders for host-provided data.
 - [ ] Defined supplied data makes zero requests, including valid empty data.
 - [ ] Invalid supplied data supersedes pending source, replaces prior content with its validation error, and never falls through to `sref`.
 - [ ] Clearing `data` resumes retained eligible `sref`; clearing both inputs in one synchronous update yields empty state.

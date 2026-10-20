@@ -28,7 +28,7 @@ The corrected generated contract is transport authority. Component validation, s
 
 ## Input precedence
 
-For the four non-Reader elements, `data !== undefined` selects supplied mode.
+For Text Segment, Bilingual Segment, and Source Card, `data !== undefined` selects supplied mode.
 
 - Valid data makes zero requests.
 - Valid empty data remains authoritative.

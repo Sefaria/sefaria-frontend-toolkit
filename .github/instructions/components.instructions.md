@@ -7,9 +7,9 @@ applyTo: "packages/web-components/**,examples/explorer/src/authored/**,examples/
 
 # Component Instructions
 
-- Give every public element component-specific `sref` and raw `data` inputs; do not expose a public prepared rendering model.
+- Give all five public elements a component-specific `sref`. Only Text Segment, Bilingual Segment, and Source Card accept component-specific raw `data`; do not expose a public prepared rendering model.
 - Keep raw input, source options, events, and diagnostics specific to one component surface. Do not create a generalized domain or data facade.
-- For the five non-Reader elements, defined `data` is authoritative, including valid empty data and invalid data. Invalid supplied data must supersede pending source, replace prior content with the validation error, and never fall through to `sref`.
+- For Text Segment, Bilingual Segment, and Source Card, defined `data` is authoritative, including valid empty data and invalid data. Invalid supplied data must supersede pending source, replace prior content with the validation error, and never fall through to `sref`.
 - Keep deterministic validation, selection, normalization, and preparation independent of clients, caches, DOM state, and global state.
 - Use corrected generated contracts directly for complete endpoint payloads. Define narrow validators only for the component-specific selected fragments or response-shaped slices the public contract actually accepts.
 - Preserve network and abort rejections internally as original causes. Current element-owned failures must become accessible state and documented events without unhandled promise rejections; stale completions publish nothing.

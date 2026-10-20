@@ -3,6 +3,7 @@ import { expect, test, vi } from "vitest";
 import type { SefariaReader, SefariaSourceCard } from "@sefaria/web-components";
 
 import micah from "./site-fixtures/micah-6-8-2026-09-28.json";
+import micahChapter from "./site-fixtures/micah-6-2026-10-20.json";
 import { createMcpReaderSource } from "../examples/mcp-app/src/app.js";
 
 function stubFetch() {
@@ -15,8 +16,8 @@ function stubFetch() {
         headers: { "content-type": "application/json" },
       });
     }
-    if (url.includes("/api/links/")) {
-      return new Response("[]", {
+    if (url.endsWith("/data/micah-6.json")) {
+      return new Response(JSON.stringify(micahChapter.payload), {
         headers: { "content-type": "application/json" },
       });
     }
@@ -37,13 +38,16 @@ test("supplied Source Card data renders with zero Sefaria requests", async () =>
   vi.unstubAllGlobals();
 });
 
-test("a Reader served by a local capability makes no Sefaria requests", async () => {
+test("a Reader uses separate local verse and chapter responses without Sefaria requests", async () => {
   const requests = stubFetch();
   document.body.innerHTML = "<sefaria-reader></sefaria-reader>";
   await import("../examples/site-snippets/local-reader-loader.ts");
   const reader = document.querySelector("sefaria-reader") as SefariaReader;
   await vi.waitFor(() => expect(reader.status).toBe("ready"));
-  expect(requests).toEqual(["/data/micah-6-8.json"]);
+  expect(requests.sort()).toEqual([
+    "/data/micah-6-8.json",
+    "/data/micah-6.json",
+  ]);
   vi.unstubAllGlobals();
 });
 test("the MCP App Reader continues through host tools, never Sefaria", async () => {
