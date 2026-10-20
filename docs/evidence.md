@@ -2,6 +2,16 @@
 
 # Evidence
 
+## Unified Text Segment language selection
+
+**Maintainer decision on October 8, 2026:** replace Text Segment's mutually exclusive strict-language and preferred-translation inputs outright in the next alpha. The maintainer then chose the simpler name `language`, rather than `version-language`, for the unified input. One optional `language` selects either original or translated text; omission retains primary selection. Full language-family names remain the transport vocabulary. Exact edition and fallback policy remain independent inputs. This supersedes the Text Segment split recorded under preferred translation selection below, not the translation-side preference on two-sided components.
+
+**Source observation on October 8, 2026:** `text-segment-element.ts` exposes both language properties and rejects their combination; `text-segment.ts` duplicates the distinction in its selection union. The shared preferred-translation helper rejects source editions, which is appropriate for two-sided translation selection but not for one arbitrary selected segment. Unified segment preparation instead matches family evidence regardless of source role, while retaining primary evidence for the omitted-language case. No transport correction, client policy, or upstream behavior change is required.
+
+**Version decision on October 8, 2026:** the maintainer requested the `0.1.1` alpha line for this change. The installed Changesets CLI consumed the note and generated synchronized changelogs and dependent private-workspace updates. Its default next version was `0.1.0-alpha.1`; the installed npm version command then set the three private library manifests to the explicitly requested `0.1.1-alpha.0`, and the newly generated changelog headings and dependency entries were aligned with that target. Prerelease mode remains `alpha`, internal dependencies remain `workspace:*`, and no package publication or source tag was created.
+
+**Historical version-policy regression on October 8, 2026:** the integration-policy check admitted planned install guidance only for the literal initial version `0.1.0-alpha.0`, rejecting the same qualified wording for `0.1.1-alpha.0`. The feature branch initially supplied its client manifest version to permit explicitly pending guidance. The subsequent npm-launch documentation established `scripts/npm-documentation-release.json` as the independent published recommendation owner and replaced that prepublication policy. During integration, published recommendations remain `0.1.0-alpha.0`, source manifests remain `0.1.1-alpha.0`, and the obsolete planned-install policy is removed rather than creating a second recommendation authority. New-language candidate examples use the candidate build's local modules; production promotion must qualify the selected runtime against its release artifacts.
+
 ## Conditional post-launch documentation
 
 **Documentation scope on October 8, 2026:** this isolated branch prepares finished-state consumer guidance for public npm `0.1.0-alpha.0`, the public `v0.1.0-alpha.0` GitHub Release and version-pinned jsDelivr/UNPKG delivery. It starts from release-engineering source `2d9cade6cc5b517d1ee4189e3a8d6e636cacde90`. Consumer wording describes the assumed completed launch; it is not publication evidence.
