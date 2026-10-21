@@ -732,6 +732,71 @@ try {
   await previewServer.close();
 }
 
+async function assertExampleCardHeadings(browser, engineName) {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  try {
+    const page = await context.newPage();
+    for (const [route, selector, titles] of [
+      ["/", ".hero-example h2", ["Micah 6:8, loaded live from Sefaria"]],
+      [
+        "/use-components/start-here.html",
+        ".snippet-demo h2",
+        ["Paste these two lines", "Live result"],
+      ],
+    ]) {
+      await page.goto(siteRouteUrl(route), { waitUntil: "networkidle" });
+      await assertEqual(
+        (await page.locator(selector).allTextContents()).join("\n"),
+        titles.join("\n"),
+        `${engineName} ${route} card heading text`,
+      );
+      for (const width of [1280, 390]) {
+        await page.setViewportSize({ width, height: 900 });
+        const headings = await page.locator(selector).evaluateAll((nodes) =>
+          nodes.map((heading) => {
+            const style = globalThis.getComputedStyle(heading);
+            return {
+              borderTop: style.borderTopWidth,
+              paddingTop: style.paddingTop,
+              marginTop: style.marginTop,
+            };
+          }),
+        );
+        for (const [index, heading] of headings.entries()) {
+          for (const [property, value] of Object.entries(heading)) {
+            await assertEqual(
+              value,
+              "0px",
+              `${engineName} ${route} card heading ${index + 1} ${property} at ${width}px`,
+            );
+          }
+        }
+      }
+    }
+    const normalHeadings = await page
+      .locator(".vp-doc h2")
+      .evaluateAll((nodes) =>
+        nodes
+          .filter((heading) => !heading.closest(".snippet-demo"))
+          .map((heading) => {
+            const style = globalThis.getComputedStyle(heading);
+            return (
+              Number.parseFloat(style.borderTopWidth) > 0 &&
+              Number.parseFloat(style.paddingTop) > 0 &&
+              Number.parseFloat(style.marginTop) > 0
+            );
+          }),
+      );
+    await assertEqual(
+      normalHeadings.length > 0 && normalHeadings.every(Boolean),
+      true,
+      `${engineName} normal document headings retain section dividers and spacing`,
+    );
+  } finally {
+    await context.close();
+  }
+}
+
 async function assertPromotionEditorActivation(engine) {
   const routes = await findPromotionRoutes(path.join(root, "dist", "site"));
   const browser = await engine.launch();
@@ -823,6 +888,7 @@ async function assertPromotionEditorActivation(engine) {
 async function assertDocumentationNotice(engine) {
   const browser = await engine.launch({ headless: true });
   try {
+    await assertExampleCardHeadings(browser, engine.name());
     const label = (message) =>
       `${engine.name()} documentation notice: ${message}`;
     const unhydratedContext = await browser.newContext({
