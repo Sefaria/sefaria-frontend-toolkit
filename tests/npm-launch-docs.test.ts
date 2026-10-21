@@ -8,6 +8,7 @@ import {
   npmDocumentationFiles,
   renderNpmDocumentation,
 } from "../scripts/reference/npm-documentation.js";
+import { CONTRIBUTOR_ONLY_DOC_PATTERNS } from "../scripts/site-check-selection.mjs";
 
 const read = (file: string) =>
   readFile(new URL(`../${file}`, import.meta.url), "utf8");
@@ -100,8 +101,12 @@ Historical Pages version 0.0.0-alpha.37286368389.1`;
 
   it("keeps administration repository-only and live checks on the selected CDN host", async () => {
     const config = await read("docs/.vitepress/config.ts");
-    const exclusions = /srcExclude:\s*\[([\s\S]*?)\]/u.exec(config)?.[1];
-    expect(exclusions).toContain('"release-administration.md"');
+    expect(config).toMatch(
+      /srcExclude:\s*\[\.\.\.CONTRIBUTOR_ONLY_DOC_PATTERNS\]/u,
+    );
+    expect(CONTRIBUTOR_ONLY_DOC_PATTERNS).toContain(
+      "release-administration.md",
+    );
     const liveChecks = await read("scripts/test-site-session-1.mjs");
     expect(liveChecks).toContain(
       '["www.sefaria.org", new URL(scriptUrl).host].includes(host)',

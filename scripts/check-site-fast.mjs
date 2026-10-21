@@ -2,44 +2,13 @@ import { spawnSync } from "node:child_process";
 import path from "node:path";
 import process from "node:process";
 
+import { selectFastCheckCommands } from "./site-check-selection.mjs";
+
 const root = path.resolve(import.meta.dirname, "..");
 const all = process.argv.includes("--all");
 
 const changed = all ? undefined : getChangedFiles();
-const selectAll = changed === undefined;
-const files = changed ?? [];
-
-const commands = [];
-if (selectAll || files.length > 0) {
-  commands.push(["format:check"], ["lint"]);
-}
-if (
-  selectAll ||
-  files.some((file) => file.startsWith("docs/") || file.startsWith("examples/"))
-) {
-  commands.push(["build:site"]);
-  commands.push(["test", "tests/documentation-site.test.ts"]);
-}
-if (
-  selectAll ||
-  files.some((file) =>
-    /^(docs\/reference|packages\/|scripts\/check-api-docs\.mjs|pnpm-lock\.yaml)/u.test(
-      file,
-    ),
-  )
-) {
-  commands.push(["check:api-docs"]);
-}
-if (
-  selectAll ||
-  files.some((file) =>
-    /^(docs\/|README\.md|packages\/.*README\.md)/u.test(file),
-  )
-) {
-  commands.push(["prose:check"]);
-}
-
-for (const args of commands) runPnpm(args);
+for (const args of selectFastCheckCommands(changed)) runPnpm(args);
 
 function getChangedFiles() {
   const base =

@@ -108,7 +108,7 @@ pnpm build:site
 pnpm preview:site
 ```
 
-For documentation-site iteration, `pnpm check:site:fast` is an inner-loop shortcut. It formats and lints changed files, runs the documentation-site Vitest coverage that matches changed pages, and runs API-reference freshness or prose checks only when their inputs changed. Pass `--all` to select the complete fast loop, and expect it to fall back to that same broad selection when Git cannot determine the changed paths. This command is not final proof: `pnpm check:site` and especially `pnpm check` remain the acceptance gates before review.
+Run `pnpm check:site:fast` for a path-selected inner loop. It runs repository-wide format and lint checks when files change. Public docs, shared VitePress configuration, and example changes also build the site and run documentation-structure tests. Contributor-only docs skip the site build but still run those structure tests and prose checks. Generated-reference inputs run `reference:check`, and API declaration inputs run `check:api-docs`. Pass `--all` to select the full fast set. If Git cannot identify changed paths, the command also selects the full fast set. This is not final proof: `pnpm check:site` and especially `pnpm check` remain the acceptance gates before review.
 
 Run the focused editor qualification:
 
@@ -647,7 +647,9 @@ Keep package-index configuration outside the repository. pnpm can record mirror-
 
 Vite builds browser artifacts. TypeScript builds reusable ES modules.
 
-Vitest runs TypeScript unit and protocol tests. Vitest Browser Mode and Playwright run Lit tests in Chromium. The official MCP Inspector qualifies the compiled stdio server, and the deterministic local harness exercises the compiled stdio and Streamable HTTP transports through the real AppBridge host and packaged App.
+Vitest has a Node `unit` project and a Chromium `browser` project. Some tests in the Node project still start Vite servers, Chromium, or Git processes. For example, `examples/linked-article/src/native-navigation.test.ts` starts Vite and Chromium, and `tests/pages-promotion.test.ts` runs Git processes. The `pnpm test -- <file>` command shown above selects files, not only pure or fast tests. `pnpm check` runs both Vitest projects and the separate acceptance stages.
+
+The official MCP Inspector qualifies the compiled stdio server, and the deterministic local harness exercises the compiled stdio and Streamable HTTP transports through the real AppBridge host and packaged App.
 
 ### Why this repository uses Oxlint
 

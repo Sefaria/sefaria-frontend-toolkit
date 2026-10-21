@@ -5,6 +5,7 @@ import { defineConfig } from "vitepress";
 import { withMermaid } from "vitepress-plugin-mermaid";
 
 import { normalizeSiteBasePath } from "../../scripts/build-site-plan.mjs";
+import { CONTRIBUTOR_ONLY_DOC_PATTERNS } from "../../scripts/site-check-selection.mjs";
 import {
   packageBrowserUrls,
   siteModuleUrlsPlugin,
@@ -101,17 +102,7 @@ export default withMermaid(
       ".VPLocalNav",
       ".VPNav",
     ],
-    srcExclude: [
-      "README.md",
-      "archive/**",
-      "design.md",
-      "development.md",
-      "evidence.md",
-      "handoff.md",
-      "release-administration.md",
-      "review.md",
-      "specs/**",
-    ],
+    srcExclude: [...CONTRIBUTOR_ONLY_DOC_PATTERNS],
     ignoreDeadLinks: [
       /^\/examples\//,
       /^\.\.\/images\/reader-navigation(?:\.html)?$/,
