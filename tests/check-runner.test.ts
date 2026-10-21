@@ -6,7 +6,6 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   CHECK_STAGES,
-  HEAVY_STAGE_NAMES,
   isMainModule,
   runCheck,
   selectCheckStages,
@@ -83,16 +82,10 @@ describe("repository check runner", () => {
     ).toBe(true);
   });
 
-  it("locks only heavyweight stages after cheap stages", () => {
-    const names = CHECK_STAGES.map((stage) => stage.name);
+  it("does not coordinate stages through a machine-wide lock", async () => {
+    const source = await readFile(path.join(root, "scripts/check.mjs"), "utf8");
 
-    expect(names.slice(0, 5).some((name) => HEAVY_STAGE_NAMES.has(name))).toBe(
-      false,
-    );
-    expect(HEAVY_STAGE_NAMES.has("Documentation site browser acceptance")).toBe(
-      true,
-    );
-    expect(HEAVY_STAGE_NAMES.has("Formatting")).toBe(false);
+    expect(source).not.toMatch(/HEAVY_STAGE_NAMES|withHeavyStageLock/u);
   });
 
   it("selects the documentation-site subset only with --site", () => {

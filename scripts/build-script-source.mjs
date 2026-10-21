@@ -297,24 +297,29 @@ export async function buildScriptSource({
   await mkdir(destination, { recursive: true });
   const source = await mkdtemp(path.join(tmpdir(), "sefaria-script-source-"));
   try {
-    const tracked = execFileSync(
-      "git",
-      [
-        "ls-files",
-        "-z",
-        "packages",
-        "scripts",
-        "package.json",
-        "pnpm-lock.yaml",
-        "pnpm-workspace.yaml",
-        "tsconfig.base.json",
-        "LICENSE",
-      ],
-      { cwd: root, encoding: "utf8", windowsHide: true },
-    )
-      .split("\0")
-      .filter(Boolean);
+    const sourcePaths = [
+      "packages",
+      "scripts",
+      "package.json",
+      "pnpm-lock.yaml",
+      "pnpm-workspace.yaml",
+      "tsconfig.base.json",
+      "LICENSE",
+    ];
+    const listFiles = (...args) =>
+      execFileSync("git", args, {
+        cwd: root,
+        encoding: "utf8",
+        windowsHide: true,
+      })
+        .split("\0")
+        .filter(Boolean);
+    const tracked = listFiles("ls-files", "-z", ...sourcePaths);
+    const deleted = new Set(
+      listFiles("ls-files", "-z", "--deleted", ...sourcePaths),
+    );
     for (const file of tracked) {
+      if (deleted.has(file)) continue;
       await mkdir(path.dirname(path.join(source, "toolkit", file)), {
         recursive: true,
       });
