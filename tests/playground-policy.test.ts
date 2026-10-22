@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   ACTIVE_PREVIEW_LIMIT,
@@ -90,6 +90,27 @@ describe("playground policy bounds", () => {
       expect(
         rewriteDeclaredAssets('export * from "./micah-6-8.js";', assets),
       ).toBe('export * from "data:text/javascript,fixture";');
+    });
+
+    it("checks the complete import graph when highlighting would run out of time", () => {
+      let clock = 0;
+      const now = vi.spyOn(Date, "now").mockImplementation(() => (clock += 25));
+      try {
+        expect(
+          rewriteDeclaredAssets(
+            'const value = 1;\nimport data from "./micah-6-8.js";',
+            assets,
+          ),
+        ).toContain('"data:text/javascript,fixture"');
+        expect(() =>
+          rewriteDeclaredAssets(
+            'const value = 1;\nimport("https://example.test/module.js");',
+            assets,
+          ),
+        ).toThrow("Dynamic imports are not supported");
+      } finally {
+        now.mockRestore();
+      }
     });
 
     it("rejects dynamic imports and undeclared re-export edges", () => {

@@ -1,8 +1,8 @@
 import { css } from "@codemirror/lang-css";
 import { html } from "@codemirror/lang-html";
 import { javascript } from "@codemirror/lang-javascript";
-import { syntaxTree } from "@codemirror/language";
-import { EditorState, type Extension } from "@codemirror/state";
+import type { LanguageSupport } from "@codemirror/language";
+import { EditorState } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import { basicSetup } from "codemirror";
 
@@ -75,7 +75,7 @@ const tabs = {
   css: requireElement<HTMLButtonElement>("#tab-css"),
   javascript: requireElement<HTMLButtonElement>("#tab-javascript"),
 };
-const languages: Record<FileKind, Extension> = {
+const languages: Record<FileKind, LanguageSupport> = {
   html: html(),
   css: css(),
   javascript: javascript(),
@@ -270,9 +270,9 @@ function collectSyntaxDiagnostics(
   for (const kind of ["html", "css", "javascript"] as const) {
     const state = EditorState.create({
       doc: files[kind],
-      extensions: [languages[kind]],
     });
-    syntaxTree(state).iterate({
+    // Highlighting trees can be incomplete when their parsing budget expires.
+    languages[kind].language.parser.parse(state.doc.toString()).iterate({
       enter(node) {
         if (!node.type.isError || diagnostics.length >= DIAGNOSTIC_COUNT_LIMIT)
           return;

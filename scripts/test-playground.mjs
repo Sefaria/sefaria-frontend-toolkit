@@ -130,6 +130,7 @@ async function qualifyBrowser(browser, name, editorUrl, origin, graph) {
 
   const primaryBase = new URL(editorUrl).pathname === "/";
   if (name === "chromium" && primaryBase) {
+    await qualifySyntaxValidationUnderClockPressure(page);
     await qualifyPreviewSupersession(page);
   }
   await page.getByRole("button", { name: "Stop preview" }).click();
@@ -256,6 +257,30 @@ async function qualifyProjectRenders(page, name) {
       `${name} ${project} no network-bearing preview control`,
     );
   }
+}
+
+async function qualifySyntaxValidationUnderClockPressure(page) {
+  await page.evaluate(() => {
+    const originalNow = Date.now;
+    let clock = originalNow();
+    Date.now = () => (clock += 1);
+    try {
+      const select = globalThis.document.querySelector("#project-select");
+      select.value = "text-segment";
+      select.dispatchEvent(new globalThis.Event("change", { bubbles: true }));
+    } finally {
+      Date.now = originalNow;
+    }
+  });
+  assertEqual(
+    await page.locator('#diagnostic-list [data-category="syntax"]').count(),
+    0,
+    "valid maintained source has no partial-parse syntax diagnostics",
+  );
+  await page
+    .getByText("Preview rendered with supplied data.")
+    .waitFor({ timeout: 30_000 });
+  await previewFrame(page).locator("sefaria-text-segment").waitFor();
 }
 
 async function qualifyInvalidProject(page, editorUrl) {
