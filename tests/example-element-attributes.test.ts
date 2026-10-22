@@ -7,26 +7,6 @@ const repository = path.resolve(import.meta.dirname, "..");
 
 const cases = [
   {
-    file: "examples/playground/projects/source-card/main.js",
-    forbidden: ["card.selectable =", "card.vocalizationMode ="],
-    required: ['card.setAttribute("selectable", "")'],
-  },
-  {
-    file: "examples/playground/projects/bilingual-segment/main.js",
-    forbidden: ["segment.layout =", "segment.sideOrder ="],
-    required: ['segment.setAttribute("layout", "side-by-side")'],
-  },
-  {
-    file: "examples/playground/projects/connections-panel/main.js",
-    forbidden: ["panel.sref =", "panel.withText =", "panel.category ="],
-    required: ['panel.setAttribute("sref", "Micah 6:8")'],
-  },
-  {
-    file: "examples/playground/projects/reader/main.js",
-    forbidden: ["reader.vocalizationMode ="],
-    required: ['reader.setAttribute("vocalization-mode", vocalization.value)'],
-  },
-  {
     file: "examples/vanilla-vite/src/main.ts",
     forbidden: [
       "card.sref =",
@@ -153,11 +133,6 @@ const cases = [
     file: "examples/mcp-app/src/app.ts",
     forbidden: ["reader.chatExport = "],
     required: ['reader.toggleAttribute("chat-export"'],
-  },
-  {
-    file: "examples/playground/projects/text-segment/main.js",
-    forbidden: ["segment.language = ", "segment.versionTitle = "],
-    required: ['segment.setAttribute("language"'],
   },
 ] as const;
 

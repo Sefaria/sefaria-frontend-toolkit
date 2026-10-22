@@ -29,7 +29,7 @@ import {
   buildPackageBrowserModules,
   buildScriptSource,
 } from "./build-script-source.mjs";
-import { runNodeScript, runPackageTool } from "./node-tool.mjs";
+import { runPackageTool } from "./node-tool.mjs";
 import { legacyRedirects } from "../docs/.vitepress/redirects.mjs";
 import { rewriteModuleUrls } from "./site-module-urls.mjs";
 import release from "./npm-documentation-release.json" with { type: "json" };
@@ -113,19 +113,6 @@ for (const step of createSiteBuildSteps({ skipTypecheck, siteBasePath })) {
       path.join(destination, "assets"),
       { recursive: true },
     );
-    continue;
-  }
-  if (step.kind === "playground") {
-    const destination = path.join(stagedPublic, "examples", step.route);
-    const playground = path.join(root, "examples", "playground");
-    runNodeScript(
-      path.join(playground, "scripts", "build-runtime-graph.mjs"),
-      [],
-      {
-        cwd: playground,
-      },
-    );
-    await buildExample(step, destination);
     continue;
   }
   if (!examplesOnly) {

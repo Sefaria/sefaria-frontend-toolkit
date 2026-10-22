@@ -26,7 +26,6 @@ const SITE_ACCEPTANCE = stage(
 export const HEAVY_STAGE_NAMES = new Set([
   "Documentation site browser acceptance",
   "Script source browser acceptance",
-  "Playground browser acceptance",
   "Compatibility qualification",
   "Tarball consumer",
   "MCP Inspector stdio acceptance",
@@ -63,7 +62,6 @@ export const CHECK_STAGES = [
   stage("TypeScript and browser tests", "test"),
   SITE_ACCEPTANCE,
   stage("Script source browser acceptance", "test:script-source"),
-  stage("Playground browser acceptance", "test:playground"),
   stage("Compatibility qualification", "compatibility:qualify"),
   stage("Tarball consumer", "package:smoke"),
   stage("Changesets rehearsal", "changeset:rehearse"),

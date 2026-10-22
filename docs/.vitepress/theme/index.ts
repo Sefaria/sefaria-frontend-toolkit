@@ -9,7 +9,6 @@ import DocumentationNotice from "./DocumentationNotice.vue";
 import HeroExample from "./HeroExample.vue";
 import HumanReviewWarning from "./HumanReviewWarning.vue";
 import LandingPreview from "./LandingPreview.vue";
-import PlaygroundEmbed from "./PlaygroundEmbed.vue";
 import SourceCardSnippet from "./SourceCardSnippet.vue";
 import SiteLink from "./SiteLink.vue";
 import StatusNote from "./StatusNote.vue";
@@ -45,7 +44,6 @@ export default {
     app.component("HeroExample", HeroExample);
     app.component("HumanReviewWarning", HumanReviewWarning);
     app.component("LandingPreview", LandingPreview);
-    app.component("PlaygroundEmbed", PlaygroundEmbed);
     app.component("SourceCardSnippet", SourceCardSnippet);
     app.component("SiteLink", SiteLink);
     app.component("StatusNote", StatusNote);
