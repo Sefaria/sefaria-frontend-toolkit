@@ -24,7 +24,6 @@ describe("documentation site build plan", () => {
 
   it("assembles every maintained browser example", () => {
     expect(EXAMPLE_BUILDS.map(({ route }) => route)).toEqual([
-      "playground",
       "explorer",
       "reader",
       "vanilla",
@@ -56,12 +55,6 @@ describe("documentation site build plan", () => {
   });
 
   it("copies the built MCP App without redirecting or cleaning its dist root", () => {
-    expect(createSiteBuildSteps({ skipTypecheck: true })).toContainEqual({
-      kind: "playground",
-      packageName: "@sefaria-example/playground",
-      route: "playground",
-      base: "/examples/playground/",
-    });
     expect(createSiteBuildSteps({ skipTypecheck: true })).toContainEqual({
       kind: "mcp-app",
       packageName: "@sefaria-example/mcp-app",
@@ -106,12 +99,27 @@ describe("documentation site build plan", () => {
       "cdn/local/sefaria-text-transform.js",
     );
     expect(SITE_REQUIRED_FILES).toContain("examples/explorer/authored.html");
-    expect(SITE_REQUIRED_FILES).toContain("examples/playground/index.html");
     expect(SITE_REQUIRED_FILES).toContain("examples/reader/controlled.html");
     expect(SITE_REQUIRED_FILES).toContain("examples/react/index.html");
     expect(SITE_REQUIRED_FILES).toContain("examples/alpine/index.html");
     expect(SITE_REQUIRED_FILES).toContain("examples/mcp-app/index.html");
   });
+
+  it.each(["/", "/sefaria-frontend-toolkit/"])(
+    "excludes the retired standalone editor at base %s",
+    (siteBasePath) => {
+      expect(
+        createSiteBuildSteps({ skipTypecheck: false, siteBasePath }),
+      ).not.toContainEqual(
+        expect.objectContaining({
+          packageName: "@sefaria-example/playground",
+        }),
+      );
+      expect(SITE_REQUIRED_FILES).not.toContain(
+        "examples/playground/index.html",
+      );
+    },
+  );
 
   it("builds every browser example under the selected project path", () => {
     expect(normalizeSiteBasePath()).toBe("/");

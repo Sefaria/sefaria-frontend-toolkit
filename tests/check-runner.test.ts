@@ -28,7 +28,7 @@ describe("repository check runner", () => {
       names.indexOf("MCP Inspector stdio acceptance"),
     );
     expect(names.indexOf("Documentation site browser acceptance")).toBeLessThan(
-      names.indexOf("Playground browser acceptance"),
+      names.indexOf("Script source browser acceptance"),
     );
     expect(names.indexOf("MCP Inspector stdio acceptance")).toBeLessThan(
       names.indexOf("MCP protocol and browser acceptance"),
@@ -44,7 +44,6 @@ describe("repository check runner", () => {
     const firstBrowserStage = Math.min(
       names.indexOf("Documentation site browser acceptance"),
       names.indexOf("Script source browser acceptance"),
-      names.indexOf("Playground browser acceptance"),
     );
 
     expect(names.slice(0, 2)).toEqual(["Formatting", "Oxlint"]);
@@ -63,7 +62,24 @@ describe("repository check runner", () => {
     expect(names.indexOf("Reference freshness")).toBe(
       names.indexOf("Public metadata") + 1,
     );
-    expect(names).toHaveLength(20);
+    expect(names).toHaveLength(19);
+  });
+
+  it("retires the standalone editor gate without removing site acceptance", async () => {
+    const packageJson = JSON.parse(
+      await readFile(path.join(root, "package.json"), "utf8"),
+    ) as { scripts: Record<string, string> };
+
+    expect(CHECK_STAGES.map(({ name }) => name)).not.toContain(
+      "Playground browser acceptance",
+    );
+    expect(HEAVY_STAGE_NAMES.has("Playground browser acceptance")).toBe(false);
+    expect(packageJson.scripts).not.toHaveProperty("test:playground");
+    expect(packageJson.scripts).not.toHaveProperty("dev:playground");
+    expect(SITE_CHECK_STAGES).toContainEqual({
+      name: "Documentation site browser acceptance",
+      args: ["test:site"],
+    });
   });
 
   it("keeps fast site checks from redefining acceptance gates", async () => {
