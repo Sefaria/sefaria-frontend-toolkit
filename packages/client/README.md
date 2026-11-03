@@ -47,4 +47,4 @@ if (data === undefined) {
 - [The client and Sefaria's API](https://sefaria.github.io/sefaria-frontend-toolkit/concepts/the-client-and-sefarias-api.html)
 - [Client reference](https://sefaria.github.io/sefaria-frontend-toolkit/reference/client.html)
 
-For maintainers: [IMPLEMENTATION.md](https://github.com/Sefaria/sefaria-frontend-toolkit/blob/main/packages/client/IMPLEMENTATION.md).
+For maintainers: [IMPLEMENTATION.md](https://github.com/Sefaria/sefaria-frontend-toolkit/blob/main/docs/contributor/packages/client/IMPLEMENTATION.md).

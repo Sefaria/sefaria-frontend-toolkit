@@ -1,6 +1,6 @@
 ---
 description: "Rules for MCP and Linker integrations"
-applyTo: "examples/mcp-app/**,examples/linked-article/**,docs/specs/integrations.md"
+applyTo: "examples/mcp-app/**,examples/linked-article/**,docs/contributor/specs/integrations.md"
 ---
 
 > Created/edited by GitHub Copilot; pending human review.

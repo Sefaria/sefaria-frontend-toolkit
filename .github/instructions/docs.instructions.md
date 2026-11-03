@@ -7,13 +7,13 @@ applyTo: "**/*.md"
 
 # Documentation Instructions
 
-- Put normative behavior and acceptance rules in `docs/specs`.
-- Put stable ownership and dependency rules in `docs/design.md`.
-- Put observed behavior and source provenance in `docs/evidence.md`.
-- Put current and planned workflows in `docs/development.md`.
-- Put review gates in `docs/review.md`.
+- Put normative behavior and acceptance rules in `docs/contributor/specs`.
+- Put stable ownership and dependency rules in `docs/contributor/design.md`.
+- Put observed behavior and source provenance in `docs/contributor/evidence.md`.
+- Put current and planned workflows in `docs/contributor/development.md`.
+- Put review gates in `docs/contributor/review.md`.
 - Use complete commit SHAs for upstream source links.
-- Check current upstream documentation before claiming a behavior is undocumented. Record the reviewed page, date, and scope in `docs/evidence.md`; absence from a limited review is not proof of absence.
+- Check current upstream documentation before claiming a behavior is undocumented. Record the reviewed page, date, and scope in `docs/contributor/evidence.md`; absence from a limited review is not proof of absence.
 - Present our guides as explanations of upstream concepts plus local handling, not as discoveries of concepts already documented by Sefaria. Preserve historical provenance when later documentation changes a coverage assessment.
 - Mark behavior as current, planned, observed, or superseded.
 - Treat corrected generated declarations as the field-level API reference.

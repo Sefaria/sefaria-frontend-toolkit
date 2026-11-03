@@ -39,9 +39,15 @@ Historical Pages version 0.0.0-alpha.37286368389.1`;
       const source = await read(file);
       expect(renderNpmDocumentation(source, version), file).toBe(source);
     }
-    expect(files).not.toContain("docs/evidence.md");
-    expect(files).not.toContain("docs/specs/distribution.md");
-    expect(files).not.toContain("docs/release-administration.md");
+    expect(files).toEqual(
+      expect.arrayContaining([
+        "docs/README.md",
+        "docs/.vitepress/theme/README.md",
+      ]),
+    );
+    expect(
+      files.filter((file) => file.startsWith("docs/contributor/")),
+    ).toEqual([]);
   });
 
   it("updates raw HTML through its real import without exposing maintenance metadata", async () => {
@@ -101,7 +107,7 @@ Historical Pages version 0.0.0-alpha.37286368389.1`;
   it("keeps administration repository-only and live checks on the selected CDN host", async () => {
     const config = await read("docs/.vitepress/config.ts");
     const exclusions = /srcExclude:\s*\[([\s\S]*?)\]/u.exec(config)?.[1];
-    expect(exclusions).toContain('"release-administration.md"');
+    expect(exclusions).toContain('"contributor/**"');
     const liveChecks = await read("scripts/test-site-session-1.mjs");
     expect(liveChecks).toContain(
       '["www.sefaria.org", new URL(scriptUrl).host].includes(host)',
@@ -179,7 +185,7 @@ Historical Pages version 0.0.0-alpha.37286368389.1`;
   });
 
   it("preserves launch history while separating consumer guidance from release finalization and Pages retirement", async () => {
-    const evidence = await read("docs/evidence.md");
+    const evidence = await read("docs/contributor/evidence.md");
     expect(evidence).toContain("37450586664");
     expect(evidence).toContain(
       "publication, verification and finalization were skipped",

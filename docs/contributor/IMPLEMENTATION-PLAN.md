@@ -2,7 +2,7 @@
 
 # Historical Sefaria Frontend Toolkit bootstrap handoff
 
-**Status:** Historical bootstrap artifact. The package foundation, examples, local documentation, and qualification waves described here were completed by September 14, 2026. Use [`docs/development.md`](docs/development.md) for the current baseline and GitHub issues for remaining delivery work. This document does not authorize repository transfer, publication, Pages deployment, or a default-branch change.
+**Status:** Historical bootstrap artifact. The package foundation, examples, local documentation, and qualification waves described here were completed by September 14, 2026. Use [`docs/contributor/development.md`](development.md) for the current baseline and GitHub issues for remaining delivery work. This document does not authorize repository transfer, publication, Pages deployment, or a default-branch change.
 
 ## Bootstrap objective
 
@@ -26,7 +26,7 @@ Subsequent PRs may establish package artifacts, examples, and documentation/site
 
 ## Completed follow-on work
 
-The later package-foundation, example, local-documentation, and integration-qualification waves are complete on the toolkit branch. Their current behavior is documented in [`docs/development.md`](docs/development.md), while immutable pre-bootstrap and presentation sources remain linked below for historical inspection. Mutable execution tracking does not belong in this artifact or the normative specifications.
+The later package-foundation, example, local-documentation, and integration-qualification waves are complete on the toolkit branch. Their current behavior is documented in [`docs/contributor/development.md`](development.md), while immutable pre-bootstrap and presentation sources remain linked below for historical inspection. Mutable execution tracking does not belong in this artifact or the normative specifications.
 
 ## Immutable historical archive
 
