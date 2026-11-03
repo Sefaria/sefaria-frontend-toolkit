@@ -77,12 +77,20 @@ describe("EP1–EP5 README entry points", () => {
   );
 
   it.each([
-    ["packages/client/README.md", "@sefaria/api-client"],
-    ["packages/text-transform/README.md", "@sefaria/text-transform"],
-    ["packages/web-components/README.md", "@sefaria/web-components"],
+    ["packages/client/README.md", "@sefaria/api-client", "client"],
+    [
+      "packages/text-transform/README.md",
+      "@sefaria/text-transform",
+      "text-processing",
+    ],
+    [
+      "packages/web-components/README.md",
+      "@sefaria/web-components",
+      "components",
+    ],
   ])(
     "%s gives an exact npm installation and a maintainer link",
-    async (file, name) => {
+    async (file, name, specification) => {
       const readme = await read(file);
       expect(readme).not.toContain("_authToken");
       expect(readme).toContain("help/install-and-status.html#packages");
@@ -91,8 +99,11 @@ describe("EP1–EP5 README entry points", () => {
       expect(readme).not.toMatch(/pending hosted qualification/u);
       expect(readme).not.toMatch(/read:packages/u);
       expect(readme).toContain(
-        `https://github.com/Sefaria/sefaria-frontend-toolkit/blob/main/docs/contributor/${path.posix.dirname(file)}/IMPLEMENTATION.md`,
+        `https://github.com/Sefaria/sefaria-frontend-toolkit/blob/main/docs/contributor/specs/${specification}.md`,
       );
+      await expect(
+        read(`docs/contributor/specs/${specification}.md`),
+      ).resolves.toBeTypeOf("string");
     },
   );
 

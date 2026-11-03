@@ -12,9 +12,15 @@ Use that immutable revision to inspect the historical [root README](https://gith
 
 The original wording, status claims, timestamps, and human-review disclaimers are historical records, not fresh assertions. Follow the current [specifications](../specs/client.md), [development guide](../development.md), and [evidence record](../evidence.md) for maintained information.
 
+## Bootstrap snapshot
+
+The [historical bootstrap plan](https://github.com/Sefaria/sefaria-frontend-toolkit/blob/2d1e3905e41dfd11cc710756398bea507cc3529b/IMPLEMENTATION-PLAN.md) records the completed package-foundation, example, local-documentation, and qualification waves. Its original integration target, `feature/avilevin/frontend-toolkit-alpha`, and CI-only branch policy are historical context, not today's branch instructions. That bootstrap did not authorize repository transfer, publication, Pages deployment, or a default-branch change.
+
+Its pre-bootstrap source remains pinned at [`7bc2d258fac2959beb5252ebdbcbddbaccd0c7b7`](https://github.com/Arithmomaniac/sefaria-web-components/tree/7bc2d258fac2959beb5252ebdbcbddbaccd0c7b7), including the former `demos/linker`, `demos/mcp`, `demos/showcase`, and documentation trees. The plan's old deferred list is not the current backlog; use [Development](../development.md) for the maintained baseline and repository issues for delivery tracking.
+
 ## What remains active?
 
-Specifications, architecture ownership, and source evidence remain at their established current paths. The rewrite adds reader-oriented guides; it does not retire valid contracts or silently replace deliberate local behavior with Sefaria defaults.
+Specifications, architecture ownership, and source evidence are maintained together under `docs/contributor/`. Their relocation does not retire valid contracts or silently replace deliberate local behavior with Sefaria defaults.
 
 The former demo-capture paths were removed from active documentation. Their historical versions remain retrievable from the pinned commit. New prose should link to current guides, not treat a dated capture as an API reference.
 

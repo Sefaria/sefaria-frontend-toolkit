@@ -365,6 +365,14 @@ Private component preparation calls `normalizeText` once and stores `bodyHtml` p
 
 Raw payload HTML must not be stored in prepared state for later interpretation. The element does not repeat normalization or API parsing. Full `taamim_and_nikkud` mode renders the original safe fields directly and performs zero vocalization calls. A non-full mode derives every HTML field through `applyVocalizationToHtml`, always from the immutable original prepared state. The element then replaces canonical note placeholders with presentation markup from matching local note records.
 
+### Parsing and serialization
+
+The following describes the current implementation mechanism, not an additional public contract. Fragments are parsed in HTML mode, decoding entities and applying browser-style recovery to malformed markup. Serializers escape text and attribute values, sort retained attributes, and emit canonical markup rather than returning the original source string. `applyVocalizationToHtml` shares the serializer but does not apply the sanitizer's allowlist.
+
+Parsing, traversal, and serialization are iterative so realistic deep nesting does not exhaust the JavaScript call stack. The normalizer assigns each element one of five actions: retain a reviewed element, unwrap its children, remove its subtree, replace it with text, or unwrap it as a block with a deferred separator. Only retention can emit a tag or attribute; parser recovery does not confer trust on unsupported markup.
+
+Block separators wait for visible content. This keeps adjacent legacy blocks from concatenating words without introducing leading, trailing, or duplicate spaces. The same traversal recognizes footnote marker/body pairs and serializes body and note fields against the shared [output bound](#output-bound).
+
 ## Compatibility evidence
 
 Compatibility tests compare retained pure behavior with pinned Sefaria implementations or fixed deployed fixtures.

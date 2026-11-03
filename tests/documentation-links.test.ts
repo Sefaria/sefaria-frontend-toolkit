@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -14,11 +14,6 @@ const journey = [
   "README.md",
   "docs/README.md",
   "docs/contributor/archive/README.md",
-  "docs/contributor/handoff.md",
-  "docs/contributor/IMPLEMENTATION-PLAN.md",
-  "docs/contributor/packages/client/IMPLEMENTATION.md",
-  "docs/contributor/packages/text-transform/IMPLEMENTATION.md",
-  "docs/contributor/packages/web-components/IMPLEMENTATION.md",
   "docs/contributor/design.md",
   "docs/contributor/development.md",
   "docs/contributor/evidence.md",
@@ -39,6 +34,27 @@ describe("GitHub Markdown file and anchor parity", () => {
   it("keeps the maintained learning journey on real repository targets", async () => {
     expect(await validateMarkdownLinks(root, journey)).toEqual([]);
   });
+
+  it.each([
+    {
+      file: "packages/text-transform/src/html.ts",
+      anchor: "parsing-and-serialization",
+    },
+    {
+      file: "packages/text-transform/src/normalize.ts",
+      anchor: "normalization",
+    },
+  ])(
+    "keeps $file algorithm links in the owning specification",
+    async ({ file, anchor }) => {
+      const source = await readFile(path.join(root, file), "utf8");
+      const target = /@see \[[^\]]+\]\(([^)]+)\)/u.exec(source)?.[1];
+      expect(target).toBe(
+        `../../../docs/contributor/specs/text-processing.md#${anchor}`,
+      );
+      expect(await validateMarkdownLinks(root, [file])).toEqual([]);
+    },
+  );
 
   it("rejects broken files and anchors but ignores code-fence examples", async () => {
     const fixtureRoot = await mkdtemp(path.join(tmpdir(), "markdown-links-"));

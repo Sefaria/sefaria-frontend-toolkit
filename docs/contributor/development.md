@@ -22,7 +22,7 @@ The `integration:check` stage also parses active paths, package manifests, workf
 
 The same stage reconciles committed source-stamped inventories containing the 73 test files from `Arithmomaniac/sefaria-web-components@7bc2d258fac2959beb5252ebdbcbddbaccd0c7b7` and the nine pre-retirement showcase tests from `Arithmomaniac/sefaria-web-components@d7e2d59645ebf7427dcff2cbdd78073e2e7df58c`. It requires every retained destination to appear in Vitest's actual static discovery output and records a specific reason for each presentation-only or superseded retirement. The gate does not query or fetch the source repository's Git objects.
 
-[`docs/contributor/IMPLEMENTATION-PLAN.md`](https://github.com/Sefaria/sefaria-frontend-toolkit/blob/main/docs/contributor/IMPLEMENTATION-PLAN.md) is a historical bootstrap artifact. Its follow-on waves are complete, and it is not a maintained execution handoff or a normative component or transport specification. Use this development guide for the current baseline and the [repository issues](https://github.com/Sefaria/sefaria-frontend-toolkit/issues) for remaining delivery work.
+The [bootstrap snapshot](archive/README.md#bootstrap-snapshot) preserves the completed historical plan, not a maintained execution handoff or a normative component or transport specification. Use this development guide for the current baseline and the [repository issues](https://github.com/Sefaria/sefaria-frontend-toolkit/issues) for remaining delivery work.
 
 ## Contributor guides
 
@@ -72,6 +72,27 @@ These are remaining intended capabilities, not removed plans. A scaffold, comman
 | Broader compatibility coverage | Extend the small current suite with additional source-backed cases, without promising exhaustive corpus equivalence | [Compatibility evidence](evidence.md#current-focused-compatibility-qualification) |
 
 The client, text-transform foundations, current components, standalone Reader, contextual and multi-pane website Reader demos, same-App MCP Reader, named-host hierarchy acceptance, explicit chat export, and authored linked article are already delivered. New component slices still need concrete consumers; they do not justify restoring the superseded generalized model or hidden client policies.
+
+## Prebuilt Reader
+
+Use the packaged Reader when its composition fits the host:
+
+```ts
+import { createSefariaClient } from "@sefaria/api-client";
+import "@sefaria/web-components";
+
+const reader = document.createElement("sefaria-reader");
+reader.source = {
+  kind: "client",
+  client: createSefariaClient(),
+};
+reader.setAttribute("sref", "Micah 6:8");
+document.body.append(reader);
+```
+
+Compare the [packaged Reader host](../../examples/reader/controlled.html) with the [custom spatial host](../../examples/reader/index.html) using `pnpm dev:reader`. The Reader is one composition, not the whole product. A custom spatial host can instead use `@sefaria/web-components/reader-session` for semantic/raw session operations and `@sefaria/web-components/reader` for shared DOM-free source qualification; neither exposes prepared rendering content. The [Reader guide](../use-components/add-the-complete-reader.md) explains the host boundaries, and the [component specification](specs/components.md) owns the contract.
+
+For a first source review, run the browser setup and complete check below, open `pnpm dev` for authored and live component exploration, then follow one element from raw input or `sref` through private preparation and rendering. Use the specifications and [evidence record](evidence.md) for intent rather than reconstructing it from historical presentations.
 
 ## Technology
 
