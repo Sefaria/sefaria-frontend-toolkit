@@ -48,4 +48,4 @@ document.body.append(card);
 - [Give components your own data](https://sefaria.github.io/sefaria-frontend-toolkit/data-and-text-tools/give-components-your-own-data.html)
 - [Components reference](https://sefaria.github.io/sefaria-frontend-toolkit/reference/components.html)
 
-For maintainers: [IMPLEMENTATION.md](https://github.com/Sefaria/sefaria-frontend-toolkit/blob/main/docs/contributor/packages/web-components/IMPLEMENTATION.md).
+For maintainers: [Component specification](https://github.com/Sefaria/sefaria-frontend-toolkit/blob/main/docs/contributor/specs/components.md).
