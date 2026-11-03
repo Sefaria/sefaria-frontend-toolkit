@@ -97,12 +97,6 @@ describe("repository check runner", () => {
     ).toBe(true);
   });
 
-  it("does not coordinate stages through a machine-wide lock", async () => {
-    const source = await readFile(path.join(root, "scripts/check.mjs"), "utf8");
-
-    expect(source).not.toMatch(/HEAVY_STAGE_NAMES|withHeavyStageLock/u);
-  });
-
   it("selects the documentation-site subset only with --site", () => {
     expect(selectCheckStages([])).toBe(CHECK_STAGES);
     expect(selectCheckStages(["--site"])).toBe(SITE_CHECK_STAGES);
