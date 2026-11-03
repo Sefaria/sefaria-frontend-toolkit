@@ -91,7 +91,7 @@ describe("EP1–EP5 README entry points", () => {
       expect(readme).not.toMatch(/pending hosted qualification/u);
       expect(readme).not.toMatch(/read:packages/u);
       expect(readme).toContain(
-        `https://github.com/Sefaria/sefaria-frontend-toolkit/blob/main/${path.posix.dirname(file)}/IMPLEMENTATION.md`,
+        `https://github.com/Sefaria/sefaria-frontend-toolkit/blob/main/docs/contributor/${path.posix.dirname(file)}/IMPLEMENTATION.md`,
       );
     },
   );
@@ -128,7 +128,7 @@ describe("EP1–EP5 README entry points", () => {
   it("the root README keeps license and links contributors to Development", async () => {
     const readme = await read("README.md");
     expect(readme).toContain("(LICENSE)");
-    expect(readme).toContain("(docs/development.md)");
+    expect(readme).toContain("(docs/contributor/development.md)");
     expect(readme).toContain("MIT license");
   });
 });

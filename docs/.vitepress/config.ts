@@ -101,17 +101,7 @@ export default withMermaid(
       ".VPLocalNav",
       ".VPNav",
     ],
-    srcExclude: [
-      "README.md",
-      "archive/**",
-      "design.md",
-      "development.md",
-      "evidence.md",
-      "handoff.md",
-      "release-administration.md",
-      "review.md",
-      "specs/**",
-    ],
+    srcExclude: ["contributor/**", "README.md", ".vitepress/theme/README.md"],
     ignoreDeadLinks: [
       /^\/examples\//,
       /^\.\.\/images\/reader-navigation(?:\.html)?$/,

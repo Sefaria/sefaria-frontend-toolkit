@@ -39,12 +39,12 @@ These Markdown files are retained for contributors and auditors but excluded fro
 | Goal | Document |
 | --- | --- |
 | Find the audience and owner of every maintained page | [Documentation map](README.md) |
-| Set up the repository and run all checks | [Development](development.md) |
-| Inspect stable ownership boundaries | [Design](design.md) |
-| Review a change at the right depth | [Review](review.md) |
-| Read source provenance and compatibility evidence | [Evidence](evidence.md) |
-| Read normative contracts | [Specifications](specs/client.md) |
-| Read package distribution rules | [Distribution specification](specs/distribution.md) |
-| Configure external npm release prerequisites | [Release administration](release-administration.md) |
-| Find historical removed material | [Documentation archive](archive/README.md) |
-| Resume repository work | [Handoff](handoff.md) |
+| Set up the repository and run all checks | [Development](contributor/development.md) |
+| Inspect stable ownership boundaries | [Design](contributor/design.md) |
+| Review a change at the right depth | [Review](contributor/review.md) |
+| Read source provenance and compatibility evidence | [Evidence](contributor/evidence.md) |
+| Read normative contracts | [Specifications](contributor/specs/client.md) |
+| Read package distribution rules | [Distribution specification](contributor/specs/distribution.md) |
+| Configure external npm release prerequisites | [Release administration](contributor/release-administration.md) |
+| Find historical removed material | [Documentation archive](contributor/archive/README.md) |
+| Resume repository work | [Handoff](contributor/handoff.md) |

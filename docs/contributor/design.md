@@ -2,7 +2,7 @@
 
 # Design: Generated API Contracts and Declarative Components
 
-For a first explanation with examples, read [How the pieces fit together](concepts/how-the-toolkit-works.md). This document is the ownership and dependency reference.
+For a first explanation with examples, read [How the pieces fit together](../concepts/how-the-toolkit-works.md). This document is the ownership and dependency reference.
 
 ## Summary
 
@@ -74,7 +74,7 @@ Each OpenAPI correction starts with the original Sefaria route, handler, respons
 | Website reader demonstrations | The standalone page assigns `sref` to one persistent Reader; the workspace page owns lower-level session coordination, pane placement, pane pin lifetime, compact selection, and spatial descendant pruning | Public arbitrary-panel contracts or duplicate semantic history |
 | Integrations | Tool input, activation policy, external boundary validation, optional source creation, and application-specific coordination | A second domain model, public prepared-state construction, duplicate rendering, or hidden fallback transport |
 | Specifications | Intended behavior and acceptance rules | Mutable issue state |
-| `docs/evidence.md` | Observed source and deployed behavior | Normative product contracts |
+| `docs/contributor/evidence.md` | Observed source and deployed behavior | Normative product contracts |
 
 ## Package dependency diagram
 

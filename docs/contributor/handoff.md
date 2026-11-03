@@ -20,9 +20,9 @@ The same pieces support both packaged and host-specific compositions:
 | Text, bilingual, reference, source-card, and connections primitives | [Developer explorer source](https://github.com/Sefaria/sefaria-frontend-toolkit/tree/main/examples/explorer) |
 | Supported packaged Reader | `examples/reader/controlled.html` |
 | Custom host-owned spatial reading workflow | `examples/reader/index.html` |
-| Reading surfaces embedded in an ordinary page | [Authored linked article](examples/linked-article.md) |
-| The Reader delivered through an MCP App | [MCP App demonstration](examples/reader-inside-ai-chat.md) |
-| Guided explanation of the complete story | [Start here](use-components/start-here.md) and local `pnpm dev:site` presentation |
+| Reading surfaces embedded in an ordinary page | [Authored linked article](../examples/linked-article.md) |
+| The Reader delivered through an MCP App | [MCP App demonstration](../examples/reader-inside-ai-chat.md) |
+| Guided explanation of the complete story | [Start here](../use-components/start-here.md) and local `pnpm dev:site` presentation |
 
 The Reader is one composition of the reusable contracts, not the whole product. The spatial workspace deliberately demonstrates that a host can use lower-level session and component contracts when the packaged composition does not fit its interaction model.
 
@@ -36,8 +36,8 @@ The Reader is one composition of the reusable contracts, not the whole product. 
 | `examples/explorer` | Authored component states and live developer diagnostics |
 | `examples/reader`, `examples/linked-article`, `examples/mcp-app` | Distinct website, embedding, and host-transport examples |
 | `docs/.vitepress`, `scripts/build-site.mjs` | Local presentation of canonical Markdown and isolated maintained examples |
-| `docs/specs` | Intended behavior and acceptance rules |
-| `docs/evidence.md` | Upstream observations, deployed fixtures, captures, and provenance |
+| `docs/contributor/specs` | Intended behavior and acceptance rules |
+| `docs/contributor/evidence.md` | Upstream observations, deployed fixtures, captures, and provenance |
 
 The [design](design.md) defines ownership boundaries. The [development guide](development.md) is the setup and command reference. The [review guide](review.md) identifies the additional gates for contract, generated, Unicode, and integration changes.
 
@@ -49,9 +49,9 @@ Use this order when evidence conflicts:
 2. The pinned Sefaria route, handler, response builder, and tests inform OpenAPI corrections.
 3. The pinned OpenAPI input plus guarded overlay defines transport payloads.
 4. Each component's private prepared state defines rendering data.
-5. `docs/evidence.md` records observations and provenance.
+5. `docs/contributor/evidence.md` records observations and provenance.
 
-The implementation deliberately differs from Sefaria in a small number of documented areas, including sanitizer policy and some interaction choices. Review [Intentional differences](concepts/sefarias-own-texts-and-tools.md) before treating visual or text-processing differences as regressions.
+The implementation deliberately differs from Sefaria in a small number of documented areas, including sanitizer policy and some interaction choices. Review [Intentional differences](../concepts/sefarias-own-texts-and-tools.md) before treating visual or text-processing differences as regressions.
 
 ## Delivery limits
 
@@ -67,5 +67,5 @@ The implementation deliberately differs from Sefaria in a small number of docume
 1. Run the browser setup and `pnpm check` from [Development](development.md).
 2. Open `pnpm dev` for authored and live component exploration.
 3. Run `pnpm dev:reader` to compare the supported Reader with the custom spatial composition.
-4. Read [How the pieces fit together](concepts/how-the-toolkit-works.md), then inspect one element from raw input or `sref` through private preparation and rendering.
+4. Read [How the pieces fit together](../concepts/how-the-toolkit-works.md), then inspect one element from raw input or `sref` through private preparation and rendering.
 5. Use the specifications and evidence record for contract review rather than reconstructing intent from Git history or a historical presentation.

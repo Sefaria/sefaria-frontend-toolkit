@@ -1,6 +1,6 @@
 ---
 description: "Rules for component factories, Lit elements, and browser demonstrations"
-applyTo: "packages/web-components/**,examples/explorer/src/authored/**,examples/react-vite/**,examples/reader/**,docs/specs/components.md"
+applyTo: "packages/web-components/**,examples/explorer/src/authored/**,examples/react-vite/**,examples/reader/**,docs/contributor/specs/components.md"
 ---
 
 > Created/edited by GitHub Copilot; pending human review.

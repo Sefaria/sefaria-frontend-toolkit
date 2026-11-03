@@ -2,7 +2,7 @@
 
 # Documentation archive
 
-The current starting point is the [documentation home](../README.md). Git preserves the historical material; this directory is only an index, not another supported set of commands or contracts.
+The current starting point is the [documentation home](../../README.md). Git preserves the historical material; this directory is only an index, not another supported set of commands or contracts.
 
 ## September 6, 2026 snapshot
 
