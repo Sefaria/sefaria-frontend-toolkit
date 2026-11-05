@@ -508,9 +508,32 @@ test.each([
     await settle(element);
     expect(renderedText(element)).not.toContain("He has shown you");
 
-    resolvers[1]?.(jsonResponse(textPayload()));
-    await settle(element);
-    expect(renderedText(element)).toContain("He has shown you");
+    let releaseBody!: () => void;
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        releaseBody = () => {
+          controller.enqueue(
+            new TextEncoder().encode(JSON.stringify(textPayload())),
+          );
+          controller.close();
+        };
+      },
+    });
+    resolvers[1]?.(
+      new Response(body, {
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    try {
+      await settle(element);
+      expect(element.status).toBe("loading");
+      expect(renderedText(element)).not.toContain("He has shown you");
+    } finally {
+      releaseBody();
+    }
+    await expect
+      .poll(() => renderedText(element))
+      .toContain("He has shown you");
     expect(fetchMock).toHaveBeenCalledTimes(2);
   },
 );
