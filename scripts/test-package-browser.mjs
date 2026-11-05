@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 import { once } from "node:events";
-import { readFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { createServer } from "node:http";
+import { performance } from "node:perf_hooks";
 import path from "node:path";
+import console from "node:console";
 import { URL } from "node:url";
 
 import { chromium, firefox, webkit } from "playwright";
@@ -112,7 +114,11 @@ export async function testPackageBrowserModules({
             body: JSON.stringify(fixture),
           });
         });
-        await page.goto(`http://127.0.0.1:${host.address().port}`);
+        await navigatePackageBrowserHost({
+          page,
+          host,
+          engineName: engine.name(),
+        });
         const result = await page.evaluate(
           async ({ urls, fixture }) => {
             const client = await import(urls["sefaria-api-client.js"]);
@@ -212,5 +218,101 @@ export async function testPackageBrowserModules({
         host.close((error) => (error ? reject(error) : resolve())),
       ),
     ]);
+  }
+}
+
+export async function navigatePackageBrowserHost({
+  page,
+  host,
+  engineName,
+  diagnosticDirectory = path.resolve(".artifacts", "site"),
+}) {
+  const destination = `http://127.0.0.1:${host.address().port}/`;
+  const started = performance.now();
+  const events = [];
+  let droppedEvents = 0;
+  const record = (kind, details = {}) => {
+    if (events.length === 32) {
+      droppedEvents++;
+      return;
+    }
+    events.push({
+      kind,
+      elapsedMs: Math.round(performance.now() - started),
+      ...details,
+    });
+  };
+  const responses = [];
+  const onHostRequest = (request, response) => {
+    if (request.url !== "/" || responses.length === 32) return;
+    record("host-request");
+    const finish = () => record("host-response-finish");
+    const close = () =>
+      record("host-response-close", { finished: response.writableFinished });
+    response.once("finish", finish);
+    response.once("close", close);
+    responses.push({ response, finish, close });
+  };
+  const onRequest = (request) => {
+    if (request.url() === destination && request.isNavigationRequest())
+      record("browser-request");
+  };
+  const onResponse = (response) => {
+    if (response.url() === destination)
+      record("browser-response", { status: response.status() });
+  };
+  const onRequestFailed = (request) => {
+    if (request.url() === destination)
+      record("browser-request-failed", {
+        failure: request.failure()?.errorText.slice(0, 200),
+      });
+  };
+  const onDomContentLoaded = () => record("domcontentloaded");
+  const onLoad = () => record("load");
+  host.on("request", onHostRequest);
+  page.on("request", onRequest);
+  page.on("response", onResponse);
+  page.on("requestfailed", onRequestFailed);
+  page.on("domcontentloaded", onDomContentLoaded);
+  page.on("load", onLoad);
+  try {
+    await page.goto(destination);
+  } catch (error) {
+    const report = {
+      engine: engineName,
+      destination,
+      hostListening: host.listening,
+      pageAtDestination: page.url() === destination,
+      pageClosed: page.isClosed(),
+      events,
+      droppedEvents,
+    };
+    try {
+      await mkdir(diagnosticDirectory, { recursive: true });
+      await writeFile(
+        path.join(
+          diagnosticDirectory,
+          `package-browser-navigation-${engineName}.json`,
+        ),
+        `${JSON.stringify(report, null, 2)}\n`,
+      );
+    } catch (diagnosticError) {
+      console.error(
+        "Could not write package-browser navigation diagnostics:",
+        diagnosticError,
+      );
+    }
+    throw error;
+  } finally {
+    host.off("request", onHostRequest);
+    page.off("request", onRequest);
+    page.off("response", onResponse);
+    page.off("requestfailed", onRequestFailed);
+    page.off("domcontentloaded", onDomContentLoaded);
+    page.off("load", onLoad);
+    for (const { response, finish, close } of responses) {
+      response.off("finish", finish);
+      response.off("close", close);
+    }
   }
 }
