@@ -47,4 +47,4 @@ console.log(withVowels);
 - [Clean text and safety](https://sefaria.github.io/sefaria-frontend-toolkit/concepts/clean-text-and-safety.html)
 - [Text transform reference](https://sefaria.github.io/sefaria-frontend-toolkit/reference/text-transform.html)
 
-For maintainers: [IMPLEMENTATION.md](https://github.com/Sefaria/sefaria-frontend-toolkit/blob/main/packages/text-transform/IMPLEMENTATION.md).
+For maintainers: [IMPLEMENTATION.md](https://github.com/Sefaria/sefaria-frontend-toolkit/blob/main/docs/contributor/packages/text-transform/IMPLEMENTATION.md).

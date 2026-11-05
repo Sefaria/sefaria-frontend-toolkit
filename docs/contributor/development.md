@@ -2,7 +2,7 @@
 
 # Development
 
-This contributor guide describes the maintained source tree and npm-only release lifecycle. The repository's specifications define intended behavior; implementation and tests establish what is currently delivered. Public consumers use the synchronized `@sefaria` npm packages and version-pinned npm CDN files from [Install and status](help/install-and-status.md). Provider observations and conditional documentation deployment gates belong in [Evidence](evidence.md#conditional-post-launch-documentation).
+This contributor guide describes the maintained source tree and npm-only release lifecycle. The repository's specifications define intended behavior; implementation and tests establish what is currently delivered. Public consumers use the synchronized `@sefaria` npm packages and version-pinned npm CDN files from [Install and status](../help/install-and-status.md). Provider observations and conditional documentation deployment gates belong in [Evidence](evidence.md#conditional-post-launch-documentation).
 
 The sections below separate delivered baseline behavior, changes from older plans, and work that remains intended. A runnable command is not proof that the corresponding integration is finished.
 
@@ -22,17 +22,17 @@ The `integration:check` stage also parses active paths, package manifests, workf
 
 The same stage reconciles committed source-stamped inventories containing the 73 test files from `Arithmomaniac/sefaria-web-components@7bc2d258fac2959beb5252ebdbcbddbaccd0c7b7` and the nine pre-retirement showcase tests from `Arithmomaniac/sefaria-web-components@d7e2d59645ebf7427dcff2cbdd78073e2e7df58c`. It requires every retained destination to appear in Vitest's actual static discovery output and records a specific reason for each presentation-only or superseded retirement. The gate does not query or fetch the source repository's Git objects.
 
-[`IMPLEMENTATION-PLAN.md`](https://github.com/Sefaria/sefaria-frontend-toolkit/blob/main/IMPLEMENTATION-PLAN.md) is a historical bootstrap artifact. Its follow-on waves are complete, and it is not a maintained execution handoff or a normative component or transport specification. Use this development guide for the current baseline and the [repository issues](https://github.com/Sefaria/sefaria-frontend-toolkit/issues) for remaining delivery work.
+[`docs/contributor/IMPLEMENTATION-PLAN.md`](https://github.com/Sefaria/sefaria-frontend-toolkit/blob/main/docs/contributor/IMPLEMENTATION-PLAN.md) is a historical bootstrap artifact. Its follow-on waves are complete, and it is not a maintained execution handoff or a normative component or transport specification. Use this development guide for the current baseline and the [repository issues](https://github.com/Sefaria/sefaria-frontend-toolkit/issues) for remaining delivery work.
 
 ## Contributor guides
 
 For reader-oriented explanations, use the friendly guides rather than the archived demo transcripts:
 
-- [How the pieces fit together](concepts/how-the-toolkit-works.md)
-- [Render text](data-and-text-tools/clean-up-stored-sefaria-text.md)
-- [Text markup](concepts/clean-text-and-safety.md)
-- [Intentional differences from Sefaria](concepts/sefarias-own-texts-and-tools.md)
-- [Reader navigation and host boundaries](use-components/add-the-complete-reader.md)
+- [How the pieces fit together](../concepts/how-the-toolkit-works.md)
+- [Render text](../data-and-text-tools/clean-up-stored-sefaria-text.md)
+- [Text markup](../concepts/clean-text-and-safety.md)
+- [Intentional differences from Sefaria](../concepts/sefarias-own-texts-and-tools.md)
+- [Reader navigation and host boundaries](../use-components/add-the-complete-reader.md)
 
 ## Implemented on this baseline
 
@@ -127,9 +127,11 @@ After the next release qualifies, advance `release/docs` through a reviewed merg
 
 ## Keep the documentation current
 
+Contributor-only guides, specifications, and historical provenance live under `docs/contributor/`. VitePress excludes that subtree as a whole; do not add per-guide filename exclusions. The repository documentation index at `docs/README.md` and the colocated `docs/.vitepress/theme/README.md` remain explicit non-page exceptions.
+
 The maintainer owns every page by default. Generated reference pages under `docs/reference` belong to their source JSDoc or TSDoc and to the generator in `scripts/reference`. Never edit generated Markdown. Change the source comment or the generator, then run `pnpm reference:generate`.
 
-`scripts/npm-documentation-release.json` owns the exact published version recommended by consumer documentation. Advance it only after qualifying the next release, not merely when Changesets advances source manifests. The site runner, landing quick installs and generated assistant index read this input. `pnpm reference:generate` synchronizes current-version literals in stamped consumer Markdown and READMEs. Runnable HTML snippets use their exact elements import as the version anchor, without a maintenance stamp in copyable code. Raw files stay copyable without unresolved placeholders. `pnpm reference:check` rejects stale stamps or output. In a synchronized file, every occurrence of its anchored version is a current recommendation. Keep immutable launch history, release-administration commands, evidence and archived versions outside this synchronization set.
+`scripts/npm-documentation-release.json` owns the exact published version recommended by consumer documentation. Advance it only after qualifying the next release, not merely when Changesets advances source manifests. The site runner, landing quick installs and generated assistant index read this input. `pnpm reference:generate` synchronizes current-version literals in stamped consumer Markdown and READMEs. Runnable HTML snippets use their exact elements import as the version anchor, without a maintenance stamp in copyable code. Raw files stay copyable without unresolved placeholders. `pnpm reference:check` rejects stale stamps or output. In a synchronized file, every occurrence of its anchored version is a current recommendation. `scripts/reference/npm-documentation.ts` explicitly owns the synchronized input list, including the repository index and theme README even though neither is a site page. Keep immutable launch history, release-administration commands, evidence and archived versions outside this synchronization set.
 
 Update the docs when one of these happens:
 
@@ -370,7 +372,7 @@ The upstream repository lookup and the Octokit issue and handoff requests explic
 
 The `OpenAPI drift` workflow (`.github/workflows/openapi-drift.yml`) runs the same command daily at 06:17 UTC and on manual dispatch, always using the repository default-branch checkout. Its detection job has only `contents: read` and `issues: write`. With `--issue`, the command creates or updates one open issue labeled `openapi-drift` while the pin differs, comments when the upstream commit moves, and closes the issue with a resolution note when a later scan sees the exact upstream commit and checksum pinned on the default branch. A subsequent upstream change opens a new issue. A scan failure never closes an issue. The triage draft PR links the issue without a closing keyword; its merge alone does not resolve the episode.
 
-When the issue is new or the upstream commit moves, a second job assigns the issue to the Copilot coding agent with the [`openapi-drift-triage`](../.github/agents/openapi-drift-triage.agent.md) custom agent. That agent expands referenced upstream and overlay-created objects to compare the resulting meaning across every affected consumer. An upstream equivalent of an existing reviewed correction can replace the redundant overlay action and guard; new or partially different behavior needs source review and bounded, source-directed requests to public, safe Sefaria endpoints. The agent records dated runtime evidence, assesses whether an upstream or new shared transport component fits all consumers, and then proposes a pinned refresh or overlay update as a draft PR. A local MongoDB export can corroborate a branch but is neither required nor an HTTP response authority. If evidence does not establish the contract, the agent leaves the pin unchanged and documents the gap in an investigation-only draft. It does not manage the drift issue; a human still performs the source review. GitHub requires a user token to assign Copilot, so this step uses the optional `COPILOT_ASSIGN_TOKEN` repository secret: a fine-grained personal access token for this repository only, with read and write access to actions, contents, issues, and pull requests, owned by a user with Copilot. Without that secret the job logs a notice and a maintainer can assign the issue to Copilot from the issue page. If the assignment request fails, or Copilot is already assigned when a later commit arrives, the run fails with a manual-reassignment instruction; an add-assignee request would otherwise appear to succeed without starting a new agent session. The issue already records the new commit. The first automatic handoff has not yet run, so the handoff path is implemented but unverified in production. `pnpm integration:check` pins this workflow's triggers, job permissions, commands, and its only permitted secret reference.
+When the issue is new or the upstream commit moves, a second job assigns the issue to the Copilot coding agent with the [`openapi-drift-triage`](../../.github/agents/openapi-drift-triage.agent.md) custom agent. That agent expands referenced upstream and overlay-created objects to compare the resulting meaning across every affected consumer. An upstream equivalent of an existing reviewed correction can replace the redundant overlay action and guard; new or partially different behavior needs source review and bounded, source-directed requests to public, safe Sefaria endpoints. The agent records dated runtime evidence, assesses whether an upstream or new shared transport component fits all consumers, and then proposes a pinned refresh or overlay update as a draft PR. A local MongoDB export can corroborate a branch but is neither required nor an HTTP response authority. If evidence does not establish the contract, the agent leaves the pin unchanged and documents the gap in an investigation-only draft. It does not manage the drift issue; a human still performs the source review. GitHub requires a user token to assign Copilot, so this step uses the optional `COPILOT_ASSIGN_TOKEN` repository secret: a fine-grained personal access token for this repository only, with read and write access to actions, contents, issues, and pull requests, owned by a user with Copilot. Without that secret the job logs a notice and a maintainer can assign the issue to Copilot from the issue page. If the assignment request fails, or Copilot is already assigned when a later commit arrives, the run fails with a manual-reassignment instruction; an add-assignee request would otherwise appear to succeed without starting a new agent session. The issue already records the new commit. The first automatic handoff has not yet run, so the handoff path is implemented but unverified in production. `pnpm integration:check` pins this workflow's triggers, job permissions, commands, and its only permitted secret reference.
 
 ## Client fixture candidate capture
 
@@ -525,7 +527,7 @@ pnpm dev:linked-article
 
 The development server shows the authored article page. The native citation is present in static HTML; the module enhancement opens a host-owned native dialog and assigns Source Card `sref` only after an eligible unmodified activation.
 
-The [authored linked-article guide](examples/linked-article.md) covers native fallback, page-owned request lifecycle, strict deterministic transport, and the immutable archive for the retired automatic Linker.
+The [authored linked-article guide](../examples/linked-article.md) covers native fallback, page-owned request lifecycle, strict deterministic transport, and the immutable archive for the retired automatic Linker.
 
 The browser tests exercise Source Card source through a strict fixture fetch that accepts only the expected method, origin, decoded `Micah 6:8` path, and ordered query. Separate Playwright coverage starts the actual page on an assigned loopback port with JavaScript disabled and proves that activation follows the authored Sefaria URL.
 

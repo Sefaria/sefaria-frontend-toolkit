@@ -14,8 +14,11 @@ import process from "node:process";
 const root = path.resolve(import.meta.dirname, "..");
 const compiler = path.join(root, "node_modules", "typescript", "lib", "tsc.js");
 const snippets = [
-  ["packages/client/IMPLEMENTATION.md", "## Ordinary use"],
-  ["packages/web-components/IMPLEMENTATION.md", "## Prebuilt Reader"],
+  ["docs/contributor/packages/client/IMPLEMENTATION.md", "## Ordinary use"],
+  [
+    "docs/contributor/packages/web-components/IMPLEMENTATION.md",
+    "## Prebuilt Reader",
+  ],
   ["docs/use-components/use-with-a-framework.md", "## Install and register"],
   ["docs/examples/this-weeks-portion.md", "### The card starts empty"],
 ];

@@ -19,7 +19,7 @@ describe("Wave 4 integration policy", () => {
       validateActivePaths([
         "examples/mcp-app/src/server.py",
         "demos/showcase/index.html",
-        "docs/evidence.md",
+        "docs/contributor/evidence.md",
       ]),
     ).toEqual([
       "Python runtime/build dependency: examples/mcp-app/src/server.py",
