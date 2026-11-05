@@ -34,7 +34,7 @@ The three public npm packages share numbered release `0.1.0-alpha.0` under the `
 
 ## Repository-only documentation
 
-These Markdown files are retained for contributors and auditors but excluded from the public VitePress routes.
+Contributor guides, specifications, and the archive live together under [`contributor/`](contributor/) and are excluded from public VitePress routes. This repository index and the colocated theme README are discovery and tooling files, not site pages.
 
 | Goal | Document |
 | --- | --- |
@@ -47,4 +47,3 @@ These Markdown files are retained for contributors and auditors but excluded fro
 | Read package distribution rules | [Distribution specification](contributor/specs/distribution.md) |
 | Configure external npm release prerequisites | [Release administration](contributor/release-administration.md) |
 | Find historical removed material | [Documentation archive](contributor/archive/README.md) |
-| Resume repository work | [Handoff](contributor/handoff.md) |
