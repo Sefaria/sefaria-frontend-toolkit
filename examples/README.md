@@ -18,19 +18,9 @@ The [authored component workbench](explorer/authored.html) renders supplied raw 
 
 Runnable scenario definitions live in [`explorer/src/authored`](explorer/src/authored/). Selecting an authored scenario never starts a live operation.
 
-## Editable supplied-data projects
+## Editable component examples
 
-The [component playground](playground/index.html?project=source-card) uses one reusable HTML/CSS/plain-JavaScript editor for six maintained projects. Each project renders useful output beside the editable files, validates bounded local payloads through public client schemas, assigns public raw data through properties and scalar configuration through attributes, and makes zero Sefaria requests.
-
-| Project ID | Demonstrated local behavior |
-| --- | --- |
-| `text-segment` | Select the exact Hebrew or English edition from the supplied response. |
-| `bilingual-segment` | Change side order while retaining payload-owned language roles and directions. |
-| `source-card` | Select a source row and change vocalization without requesting replacement data. |
-| `connections-panel` | Change captured category, page, and preview visibility with zero I/O. |
-| `reader` | Change local presentation over exact Micah 6:8 source and links coverage and show an explicit limitation for uncovered navigation. |
-
-Stable built routes use `playground/index.html?project=<id>`. Source and optional request-bearing live-demo links remain trusted controls outside the edited preview.
+The [component guides](../docs/use-components/start-here.md) include focused editable samples. For a separate experiment, copy an example into your preferred editor and use the [version-pinned CDN modules](../docs/help/install-and-status.md#packages). The authored workbench above remains available for supplied-data states without setting up an editor.
 
 ## Live data and interaction
 

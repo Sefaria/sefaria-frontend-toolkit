@@ -15,7 +15,8 @@ The three public npm packages share numbered release `0.1.0-alpha.0` under the `
 | Choose an integration depth | [Get started](use-components/start-here.md) |
 | Follow the guided sequence | [Choose a surface and understand ownership](use-components/start-here.md) |
 | Compare all rendering surfaces | [Component catalog](reference/components.md) |
-| Edit a supplied-data component | [Six-project editor](examples/composed-multi-pane-reader.md) and [`examples/playground`](https://github.com/Sefaria/sefaria-frontend-toolkit/tree/main/examples/playground) |
+| Edit a component example | [Component guides](use-components/start-here.md) with embedded editable samples |
+| Explore supplied-data states | [Authored component workbench](../examples/README.md#supplied-data-component-states) |
 | Find runnable examples | [Example catalog](examples/composed-multi-pane-reader.md) |
 | Solve a task or understand data flow | [Guides](concepts/how-the-toolkit-works.md) |
 | Add authored citation previews | [Linked article](examples/linked-article.md) |

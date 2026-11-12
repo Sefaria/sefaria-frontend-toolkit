@@ -48,7 +48,6 @@ For reader-oriented explanations, use the friendly guides rather than the archiv
 | `examples/alpine-vite` | Demonstrates the same Source Card flow with Alpine 3.17.2, scalar attribute bindings, property-only raw data and source, events, and destroy cleanup. |
 | `examples/linked-article` | Progressively enhances authored Sefaria anchors with Source Card in a page-owned native modal dialog after eligible activation while preserving native navigation, focus return, visible failures, and cleanup. |
 | `examples/mcp-app` | Exposes shared `get_text` and adaptive `get_links_between_texts` registration through compiled Node stdio and Streamable HTTP transports and a static in-browser MCP host, packages a single-file App, validates corrected payloads and metadata, proves AppBridge request counts and sandbox isolation, and retains the optional authenticated isolated VS Code hierarchy walkthrough with separate explicit chat export. |
-| `examples/playground` | Provides one supplied-data-only HTML/CSS/JavaScript editor for text segment, bilingual segment, source card, connections panel, and Reader projects, with a real locally built public-module graph, opaque preview boundary, and focused Chromium/Firefox/WebKit qualification. |
 | `docs/` and `dist/site` | Provide one GitHub-readable learning sequence and a VitePress presentation that embeds isolated builds of the maintained examples and is published from validated `main`. |
 | `tests/compatibility` | Delivers focused pinned client and transform comparisons, a composed v3 validate-to-transform smoke case, and grouped qualification output without network access. The evidence is representative and non-exhaustive. |
 
@@ -110,15 +109,7 @@ pnpm preview:site
 
 For documentation-site iteration, `pnpm check:site:fast` is an inner-loop shortcut. It formats and lints changed files, runs the documentation-site Vitest coverage that matches changed pages, and runs API-reference freshness or prose checks only when their inputs changed. Pass `--all` to select the complete fast loop, and expect it to fall back to that same broad selection when Git cannot determine the changed paths. This command is not final proof: `pnpm check:site` and especially `pnpm check` remain the acceptance gates before review.
 
-Run the focused editor qualification:
-
-```powershell
-pnpm test:playground
-```
-
-This command builds the real editor graph and production host at both `/` and `/sefaria-frontend-toolkit/`, then checks Chromium, Firefox, and WebKit. It verifies parent and child CSP layers, all five maintained project renders, required declarative element and source entries, local module identity and root registration, zero delivered probe requests across fetch/socket/beacon/image/frame/navigation attempts, visible edits to every HTML/CSS/JavaScript tab, Run/Reset behavior, supported component interactions, explicit Reader coverage failure, one active preview, keyboard tabs, RTL/LTR output, a 390 px layout at 200% equivalent CSS width, and embedding from an ordinary same-origin documentation page. `pnpm setup:agent` installs and launches all three browser engines.
-
-The generated `dist/site` directory contains the VitePress pages plus allowlisted example routes under `examples/`: playground, explorer, Reader, vanilla, React, linked article, and the live static MCP host. The playground uses only supplied data; the live MCP host proves in-memory protocol, resource, AppBridge, and opaque-sandbox behavior without an external backend; `pnpm dev:mcp` proves the compiled Streamable HTTP topology.
+The generated `dist/site` directory contains the VitePress pages plus allowlisted example routes under `examples/`: explorer, Reader, vanilla, React, Alpine, linked article, weekly portion, and the live static MCP host. The component guides retain focused editable samples, and the authored explorer provides supplied-data states. The live MCP host proves in-memory protocol, resource, AppBridge, and opaque-sandbox behavior without an external backend; `pnpm dev:mcp` proves the compiled Streamable HTTP topology.
 
 `pnpm build:site` rebuilds the libraries and their packaged browser modules before script-source assembly, then typechecks each included example before bundling it. `pnpm build:site:bundles` reuses the browser modules and evidence from `pnpm build`, skips repeated typechecks, and is used inside `pnpm check` after workspace builds. Both commands verify required output files and reject a same-origin authored-source fallback. `SITE_BASE_PATH` selects the normalized absolute base used by VitePress, every example bundle, and browser acceptance; local commands default to `/`, while the Pages workflow requires `/sefaria-frontend-toolkit/`.
 
@@ -195,7 +186,6 @@ Retained Pages qualification checks anonymous module loading, MIME/CORS, matchin
 | `packages/web-components` | Declarative Lit elements, raw public input types, source, shared raw Reader source qualification, and the DOM-free Reader semantic/raw facade |
 | `tests/compatibility` | Pinned compatibility evidence for retained pure behavior |
 | `examples/explorer` | Supplied-data authored states and opt-in live diagnostics for component primitives and contextual connections |
-| `examples/playground` | Maintained supplied-data editor projects, trusted CodeMirror host, locally built ESM graph, opaque preview confinement, and focused three-browser acceptance |
 | `examples/mcp-app` | Shared corrected-payload MCP registration, compiled stdio and Streamable HTTP servers, static in-browser MCP host, self-contained App, AppBridge sandbox hosts, and isolated VS Code qualification tooling |
 | `examples/linked-article` | Authored native citation navigation and page-owned modal preview integration |
 | `examples/reader` | Interactive multi-pane website host and controlled `<sefaria-reader>` host over the DOM-free reader session |
@@ -253,7 +243,7 @@ The individual commands remain useful for targeted troubleshooting. Prefer `pnpm
 pnpm check
 ```
 
-The current command runs Prettier and Oxlint first, then stale-OpenAPI and integration-policy checks, workspace builds, official Inspector stdio qualification, deterministic real HTTP/AppBridge browser acceptance, TypeScript checks, freshly emitted API-documentation checks, public metadata, and tests. It then runs the slower production local-site assembly and site, script-source, and playground browser acceptance, followed by the offline focused compatibility qualification, private tarball consumption, and changeset rehearsal. Cheap and frequently failing stages run before the browser suites so that a failure is reported early. It prints the elapsed time and result of every completed stage, including the first failed stage, so a slow local run can be attributed without rerunning the complete gate. The qualification prints grouped pass, failure, unavailable-source, and intentional-difference results. It does not refresh network fixtures or contact Sefaria.
+The current command runs Prettier and Oxlint first, then stale-OpenAPI and integration-policy checks, workspace builds, official Inspector stdio qualification, deterministic real HTTP/AppBridge browser acceptance, TypeScript checks, freshly emitted API-documentation checks, public metadata, and tests. It then runs the slower production local-site assembly and site and script-source browser acceptance, followed by the offline focused compatibility qualification, private tarball consumption, and changeset rehearsal. Cheap and frequently failing stages run before the browser suites so that a failure is reported early. It prints the elapsed time and result of every completed stage, including the first failed stage, so a slow local run can be attributed without rerunning the complete gate. The qualification prints grouped pass, failure, unavailable-source, and intentional-difference results. It does not refresh network fixtures or contact Sefaria.
 
 Every run writes a bounded machine-readable result to `.artifacts/check/result.json`. CI uploads that result and allowlisted browser diagnostics only after a platform failure. A Linux success cannot hide a Windows failure: the required `check` aggregation succeeds only when the complete matrix succeeds.
 
@@ -265,13 +255,13 @@ Pages runs the complete `pnpm check` on its explicitly selected source with `/se
 pnpm check:site
 ```
 
-This subset runs Prettier, Oxlint, integration policy, workspace builds, TypeScript checks including documentation snippets, API-documentation checks, the production site assembly, and site browser acceptance. Use it while iterating on documentation-site pages and site snippets. It omits package tests, public metadata, the script-source and playground browser suites, MCP acceptance, compatibility, tarball, and changeset stages. If a change touches packages, component behavior, the playground, or examples used outside the site, run the matching focused command as well. `pnpm check:site` never replaces `pnpm check`: run the complete check before review.
+This subset runs Prettier, Oxlint, integration policy, workspace builds, TypeScript checks including documentation snippets, API-documentation checks, the production site assembly, and site browser acceptance. Use it while iterating on documentation-site pages and site snippets. It omits package tests, public metadata, the script-source browser suite, MCP acceptance, compatibility, tarball, and changeset stages. If a change touches packages, component behavior, or examples used outside the site, run the matching focused command as well. `pnpm check:site` never replaces `pnpm check`: run the complete check before review.
 
 The MCP acceptance transport rejects unexpected requests and uses the compiled Node server, registered resource, separate host and sandbox origins, and packaged App. TypeScript projects use ignored incremental build-information files, which reduce repeated local typecheck and build work without changing emitted artifacts.
 
 Repository validation scripts set `windowsHide: true` when starting subprocesses so Windows console windows do not appear for those commands. Existing inherited or captured stdout and stderr remain unchanged.
 
-The site and playground acceptance scripts build examples through Vite's Node API. Declaration checks, custom-elements analysis, and VitePress use the installed package's CLI entry point through Node rather than `pnpm exec` and a platform shell. The playground runtime-graph generator also runs directly through Node. These tools retain separate processes where isolation is useful; pnpm still owns workspace scripts, dependency installation, and package operations.
+The site build script builds examples through Vite's Node API. Declaration checks, custom-elements analysis, and VitePress use the installed package's CLI entry point through Node rather than `pnpm exec` and a platform shell. These tools retain separate processes where isolation is useful; pnpm still owns workspace scripts, dependency installation, and package operations.
 
 The deterministic gate does not contact Sefaria. To opt into a bounded live-data qualification of every maintained click-to-start route, including one Reader navigation and the embedded MCP text-to-links flow, run:
 

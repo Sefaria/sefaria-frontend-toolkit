@@ -2,12 +2,6 @@ import process from "node:process";
 
 export const EXAMPLE_BUILDS = [
   {
-    route: "playground",
-    packageName: "@sefaria-example/playground",
-    pages: ["index.html"],
-    playground: true,
-  },
-  {
     route: "explorer",
     packageName: "@sefaria-example/explorer",
     pages: [
@@ -128,26 +122,19 @@ export function createSiteBuildSteps({ skipTypecheck, siteBasePath = "/" }) {
       });
     }
     steps.push(
-      example.playground
+      example.mcpApp
         ? {
-            kind: "playground",
+            kind: "mcp-app",
+            packageName: example.packageName,
+            route: example.route,
+            build: !skipTypecheck,
+          }
+        : {
+            kind: "vite",
             packageName: example.packageName,
             route: example.route,
             base: `${base}examples/${example.route}/`,
-          }
-        : example.mcpApp
-          ? {
-              kind: "mcp-app",
-              packageName: example.packageName,
-              route: example.route,
-              build: !skipTypecheck,
-            }
-          : {
-              kind: "vite",
-              packageName: example.packageName,
-              route: example.route,
-              base: `${base}examples/${example.route}/`,
-            },
+          },
     );
   }
   steps.push({ kind: "vitepress" });
