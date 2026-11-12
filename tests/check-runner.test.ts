@@ -6,7 +6,6 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   CHECK_STAGES,
-  HEAVY_STAGE_NAMES,
   isMainModule,
   runCheck,
   selectCheckStages,
@@ -73,7 +72,6 @@ describe("repository check runner", () => {
     expect(CHECK_STAGES.map(({ name }) => name)).not.toContain(
       "Playground browser acceptance",
     );
-    expect(HEAVY_STAGE_NAMES.has("Playground browser acceptance")).toBe(false);
     expect(packageJson.scripts).not.toHaveProperty("test:playground");
     expect(packageJson.scripts).not.toHaveProperty("dev:playground");
     expect(SITE_CHECK_STAGES).toContainEqual({
@@ -97,18 +95,6 @@ describe("repository check runner", () => {
     expect(
       SITE_CHECK_STAGES.every((stage) => CHECK_STAGES.includes(stage)),
     ).toBe(true);
-  });
-
-  it("locks only heavyweight stages after cheap stages", () => {
-    const names = CHECK_STAGES.map((stage) => stage.name);
-
-    expect(names.slice(0, 5).some((name) => HEAVY_STAGE_NAMES.has(name))).toBe(
-      false,
-    );
-    expect(HEAVY_STAGE_NAMES.has("Documentation site browser acceptance")).toBe(
-      true,
-    );
-    expect(HEAVY_STAGE_NAMES.has("Formatting")).toBe(false);
   });
 
   it("selects the documentation-site subset only with --site", () => {
