@@ -1223,15 +1223,43 @@ async function assertDocumentationNotice(engine) {
       "0px",
       label("dismissal clears layout offsets"),
     );
-    await page
-      .locator(".VPNavBarMenu")
-      .getByRole("link", { name: "Use components", exact: true })
-      .click();
-    await assertEqual(
-      await notice.count(),
-      0,
-      label("client navigation preserves dismissal"),
+    let releasePageModule;
+    const pageModule = new Promise((resolve) => {
+      releasePageModule = resolve;
+    });
+    const deferPageModule = async (route) => {
+      await pageModule;
+      await route.continue();
+    };
+    await page.route(
+      "**/assets/use-components_start-here.md.*.js",
+      deferPageModule,
     );
+    try {
+      await Promise.all([
+        page.waitForRequest("**/assets/use-components_start-here.md.*.js"),
+        page
+          .locator(".VPNavBarMenu")
+          .getByRole("link", { name: "Use components", exact: true })
+          .click(),
+      ]);
+      await assertEqual(
+        await page.locator("h1#put-your-first-source-on-a-page").count(),
+        0,
+        label("delayed page module has not rendered the destination"),
+      );
+      releasePageModule();
+      await page.locator("h1#put-your-first-source-on-a-page").waitFor();
+      await assertText(page.locator("h1"), "Put your first source on a page");
+      await assertEqual(
+        await notice.count(),
+        0,
+        label("client navigation preserves dismissal"),
+      );
+    } finally {
+      releasePageModule();
+      await page.unrouteAll({ behavior: "wait" });
+    }
     for (const width of [1280, 390]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto(siteRouteUrl("/help/install-and-status.html"), {
@@ -1371,6 +1399,7 @@ async function assertDocumentationNotice(engine) {
       .locator(".VPNavBarMenu")
       .getByRole("link", { name: "Use components", exact: true })
       .click();
+    await blocked.locator("h1#put-your-first-source-on-a-page").waitFor();
     await assertEqual(
       await blocked.locator(".documentation-notice").count(),
       0,
