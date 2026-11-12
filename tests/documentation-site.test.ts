@@ -8,6 +8,18 @@ import { legacyRedirects } from "../docs/.vitepress/redirects.mjs";
 
 const root = path.resolve(import.meta.dirname, "..");
 const deletedPaths = [
+  "IMPLEMENTATION-PLAN.md",
+  "packages/client/IMPLEMENTATION.md",
+  "packages/text-transform/IMPLEMENTATION.md",
+  "packages/web-components/IMPLEMENTATION.md",
+  "docs/handoff.md",
+  "docs/design.md",
+  "docs/development.md",
+  "docs/evidence.md",
+  "docs/review.md",
+  "docs/release-administration.md",
+  "docs/specs",
+  "docs/archive",
   "docs/guides",
   "docs/learn",
   "docs/components",
@@ -162,14 +174,7 @@ describe("documentation site", () => {
       "docs/reference/components.md",
       "docs/reference/package-imports-and-exports.md",
       "docs/examples/linked-article.md",
-      "docs/specs/components.md",
-      "docs/design.md",
-      "docs/evidence.md",
-      "docs/development.md",
-      "docs/review.md",
       "docs/README.md",
-      "docs/archive/README.md",
-      "docs/handoff.md",
     ]) {
       await expect(
         access(path.join(root, relativePath)),

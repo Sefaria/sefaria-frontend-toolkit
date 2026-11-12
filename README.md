@@ -1,5 +1,3 @@
-> Created/edited by GitHub Copilot with human review/feedback by Avi Levin.
-
 <!-- npm-release-version: 0.1.0-alpha.0 -->
 
 # Sefaria Frontend Toolkit
@@ -39,7 +37,7 @@ Read the [documentation site](https://sefaria.github.io/sefaria-frontend-toolkit
 
 ## Contribute
 
-See [Development](docs/development.md).
+See [Development](docs/contributor/development.md).
 
 ## Project origin
 
@@ -47,4 +45,4 @@ This project began at the Microsoft Global Hackathon 2026. Thank you to Microsof
 
 ## License and attribution
 
-Copyright (c) 2026 Sefaria. This repository uses the [MIT license](LICENSE). Third-party dependencies and Sefaria text editions retain their own licenses. Historical published releases retain the license shipped with them. Source provenance is documented in [`docs/evidence.md`](docs/evidence.md).
+Copyright (c) 2026 Sefaria. This repository uses the [MIT license](LICENSE). Third-party dependencies and Sefaria text editions retain their own licenses. Historical published releases retain the license shipped with them. Source provenance is documented in [`docs/contributor/evidence.md`](docs/contributor/evidence.md).

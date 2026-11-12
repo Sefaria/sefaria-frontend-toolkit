@@ -10,7 +10,7 @@ This guide defines review gates for the delivered architecture and separately id
 - [ ] The change marks planned behavior as planned until implementation exists.
 - [ ] Upstream source links use complete commit SHAs.
 - [ ] Deployed fixtures include a capture date or immutable source.
-- [ ] Record each source conflict in `docs/evidence.md`.
+- [ ] Record each source conflict in `docs/contributor/evidence.md`.
 - [ ] Generated declarations remain the field-level transport reference.
 - [ ] Private validated component preparation remains the rendering authority; public raw data is not treated as render-ready state.
 
@@ -353,9 +353,9 @@ Review the initial and expanded corrections for:
 
 ## Documentation
 
-- [ ] Normative behavior is in `docs/specs`.
-- [ ] Stable ownership is in `docs/design.md`.
-- [ ] Observations and provenance are in `docs/evidence.md`.
+- [ ] Normative behavior is in `docs/contributor/specs`.
+- [ ] Stable ownership is in `docs/contributor/design.md`.
+- [ ] Observations and provenance are in `docs/contributor/evidence.md`.
 - [ ] Current and planned behavior are distinct.
 - [ ] Diagrams identify external payloads, runtime dependencies, type-only dependencies, orchestration, and DOM rendering.
 - [ ] Normative documents contain no mutable issue or delivery DAG.

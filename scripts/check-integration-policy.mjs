@@ -26,7 +26,7 @@ const documentationFiles = tracked.filter(
   (filename) =>
     filename === "README.md" ||
     /^(?:packages|examples)\/[^/]+\/README\.md$/u.test(filename) ||
-    /^docs\/(?:README|development)\.md$/u.test(filename) ||
+    /^docs\/(?:README|contributor\/development)\.md$/u.test(filename) ||
     filename === "docs/help/install-and-status.md",
 );
 const journeyFiles = [

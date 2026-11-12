@@ -1,5 +1,3 @@
-> Created/edited by GitHub Copilot with human review/feedback by Avi Levin.
-
 # Contributor Instructions
 
 These instructions apply to all repository changes. Read each applicable file in `.github/instructions` before you edit a matching path.
@@ -14,19 +12,19 @@ pnpm setup:agent
 
 The command installs the frozen workspace, installs Chromium, Firefox, and WebKit, and proves that all three launch. The test-disposition gate uses committed source-stamped inventories and does not require historical Git objects. The command is safe to rerun and does not replace validation. Run focused tests while developing and `pnpm check` before review.
 
-GitHub-hosted Copilot setup is conditional on the checked-out toolkit package identity, not on an exact branch name. Local Copilot CLI and Desktop worktrees run the same command explicitly. See [Development](docs/development.md#copilot-agent-and-fresh-worktree-setup) for platform requirements and failure handling.
+GitHub-hosted Copilot setup is conditional on the checked-out toolkit package identity, not on an exact branch name. Local Copilot CLI and Desktop worktrees run the same command explicitly. See [Development](docs/contributor/development.md#copilot-agent-and-fresh-worktree-setup) for platform requirements and failure handling.
 
 ## Architecture status
 
-The specifications define intended behavior, including both implemented contracts and planned work. Use [Development](docs/development.md) to identify the implementation baseline and remaining work.
+The specifications define intended behavior, including both implemented contracts and planned work. Use [Development](docs/contributor/development.md) to identify the implementation baseline and remaining work.
 
 Mark every unimplemented contract as planned. Do not describe an unimplemented contract as current behavior.
 
 ## Reuse documented knowledge before investigating
 
-Start with [the documentation index](docs/README.md), the relevant specification, and [the evidence record](docs/evidence.md). Existing guides cover the client/factory/view-model/element relationship, text markup, intentional Sefaria differences, and changed versus remaining plans. Reuse their findings and citations rather than restarting the same audit.
+Start with [the documentation index](docs/README.md), the relevant specification, and [the evidence record](docs/contributor/evidence.md). Existing guides cover the client/factory/view-model/element relationship, text markup, intentional Sefaria differences, and changed versus remaining plans. Reuse their findings and citations rather than restarting the same audit.
 
-Before calling upstream behavior undocumented, consult Sefaria's current [documentation index](https://developers.sefaria.org/llms.txt) and refetch the relevant page. The [upstream documentation coverage record](docs/evidence.md#upstream-documentation-coverage) identifies material already documented by Sefaria; do not assume our earlier research discovered something absent from its documentation.
+Before calling upstream behavior undocumented, consult Sefaria's current [documentation index](https://developers.sefaria.org/llms.txt) and refetch the relevant page. The [upstream documentation coverage record](docs/contributor/evidence.md#upstream-documentation-coverage) identifies material already documented by Sefaria; do not assume our earlier research discovered something absent from its documentation.
 
 Distinguish documented upstream behavior, additional source or fixture observations, intentional local differences, and planned or superseded decisions. A topic not found in the pages reviewed is not proof that Sefaria never documented it.
 
@@ -44,7 +42,7 @@ Use this order:
 6. Treat each component's private validated preparation as rendering-data authority; public raw inputs and generated payloads are not render-ready state.
 7. Use downstream consumers as evidence of need, not behavior authority.
 
-If evidence conflicts with a specification, record the observation in `docs/evidence.md`. Then change the owning specification or reviewed overlay before production code.
+If evidence conflicts with a specification, record the observation in `docs/contributor/evidence.md`. Then change the owning specification or reviewed overlay before production code.
 
 Use complete commit SHAs in upstream source links. Refetch mutable sources before you rely on them.
 
@@ -69,7 +67,7 @@ High-risk changes include public API contracts, OpenAPI corrections, generated o
 - Component elements own reactive input snapshots, source selection, cancellation and stale-result suppression, private preparation, layout, interaction, accessibility, theming, and DOM rendering.
 - Integrations own host input, activation policy, external unknown-JSON validation, optional client or loader creation, and application-specific coordination.
 - Specifications own intended behavior.
-- `docs/evidence.md` owns observations and source provenance.
+- `docs/contributor/evidence.md` owns observations and source provenance.
 
 Do not create a generalized domain-model package.
 
@@ -149,11 +147,11 @@ Prefer existing package scripts and locally installed executables over `npx` or 
 
 ## Put information in one place
 
-- Put normative behavior and acceptance rules in `docs/specs`.
-- Put stable ownership and dependency boundaries in `docs/design.md`.
-- Put source observations and provenance in `docs/evidence.md`.
-- Put setup and current-versus-planned workflows in `docs/development.md`.
-- Put review gates in `docs/review.md`.
+- Put normative behavior and acceptance rules in `docs/contributor/specs`.
+- Put stable ownership and dependency boundaries in `docs/contributor/design.md`.
+- Put source observations and provenance in `docs/contributor/evidence.md`.
+- Put setup and current-versus-planned workflows in `docs/contributor/development.md`.
+- Put review gates in `docs/contributor/review.md`.
 - Put field-level API definitions in generated declarations.
 - Put delivery status in GitHub issues.
 

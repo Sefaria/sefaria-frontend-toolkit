@@ -98,7 +98,7 @@ For a strict French edition, add its exact title:
 
 Text Segment uses one optional `language` input; omission selects primary. Its title alone selects a primary edition. For DOM-free Text Segment requests, use `version: { language: "french" }` or `version: {}` for primary, with an independent optional `versionTitle`. The former Text Segment `version-language` / `versionLanguage`, `translation-language` / `translationLanguage`, and `version.translationLanguage` are removed without aliases in the next alpha.
 
-Supplied data makes zero requests and must include the selected text or metadata proving the preferred language is absent. Reader carries the preferred language through navigation, but not a root's exact edition titles into unrelated works. Try French Micah and unavailable-French Berakhot in the [Source Card explorer](../../examples/explorer/source-card.html); see the [selection contract](../../docs/specs/components.md#language-and-edition-selection) for errors and request counts.
+Supplied data makes zero requests and must include the selected text or metadata proving the preferred language is absent. Reader carries the preferred language through navigation, but not a root's exact edition titles into unrelated works. Try French Micah and unavailable-French Berakhot in the [Source Card explorer](../../../../examples/explorer/source-card.html); see the [selection contract](../../specs/components.md#language-and-edition-selection) for errors and request counts.
 
 ## Lifecycle and composition
 
@@ -117,4 +117,4 @@ Supplied data makes zero requests and must include the selected text or metadata
 | Shared raw Reader source qualification and raw seed types | `@sefaria/web-components/reader` |
 | Advanced semantic/raw Reader facade: history, pins, budgets, entry info, records, and raw transitions | `@sefaria/web-components/reader-session` |
 
-`./reader-session` remains supported for advanced spatial hosts, and `./reader` supplies the shared DOM-free source-qualification boundary. Neither exposes prepared rendering content. `./bindings` and `./reader-controller` are retired. See [Render text](../../docs/data-and-text-tools/clean-up-stored-sefaria-text.md), [Reader navigation](../../docs/use-components/add-the-complete-reader.md), and the [component specification](../../docs/specs/components.md).
+`./reader-session` remains supported for advanced spatial hosts, and `./reader` supplies the shared DOM-free source-qualification boundary. Neither exposes prepared rendering content. `./bindings` and `./reader-controller` are retired. See [Render text](../../../data-and-text-tools/clean-up-stored-sefaria-text.md), [Reader navigation](../../../use-components/add-the-complete-reader.md), and the [component specification](../../specs/components.md).

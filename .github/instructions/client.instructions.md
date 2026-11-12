@@ -1,6 +1,6 @@
 ---
 description: "Rules for the corrected OpenAPI supply chain and thin client"
-applyTo: "packages/client/**,docs/specs/client.md"
+applyTo: "packages/client/**,docs/contributor/specs/client.md"
 ---
 
 # Client Instructions
@@ -27,7 +27,7 @@ applyTo: "packages/client/**,docs/specs/client.md"
 - Add JSDoc to every handwritten exported declaration and every exported interface or class property. Document field meanings, failures, and important behavior at the declaration. Link to the package README for longer explanations.
 - Implement the specified default-on per-client response cache with explicit opt-out, bounded TTL, entry count, and retained-body bytes.
 - Do not add a generalized facade, normalized model, retry, coalescing, stale fallback, persistence, cross-client sharing, or component method.
-- Cover every operation in the pinned OpenAPI scope from `docs/specs/client.md`.
+- Cover every operation in the pinned OpenAPI scope from `docs/contributor/specs/client.md`.
 - Add a correction only after source review or runtime validation identifies a mismatch.
 - Use fixed commit-pinned or dated fixtures for contract tests.
 - Test corrected schemas against the original Sefaria implementation and upstream endpoint tests.
