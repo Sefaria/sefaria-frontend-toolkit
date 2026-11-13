@@ -279,6 +279,8 @@ Run all TypeScript tests:
 pnpm test
 ```
 
+Vitest runs at most four workers by default, or fewer on smaller machines. This keeps parallel Git subprocesses, filesystem validation and browser work from overwhelming local resources; test timeouts and assertions are unchanged. Use Vitest's `--maxWorkers` option for targeted concurrency diagnostics, for example `pnpm test -- --maxWorkers=1`. Independent build-evidence corruption cases run as separate tests so each receives its own timeout and failure report.
+
 Run the current focused compatibility qualification:
 
 ```powershell

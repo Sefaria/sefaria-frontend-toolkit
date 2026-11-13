@@ -62,81 +62,84 @@ describe("packaged browser build handoff", () => {
     expect(build).not.toHaveBeenCalled();
   }, 120_000);
 
-  it("fails on stale recipe, input, and output fingerprints without rebuilding", async () => {
+  it.each([
+    "scripts/build-script-source.mjs",
+    "packages/client/dist/index.js",
+    "packages/client/dist/browser/sefaria-api-client.js",
+    "packages/client/dist/browser/THIRD-PARTY-NOTICES.txt",
+  ])("fails on a stale %s fingerprint without rebuilding", async (input) => {
     const source = await readFile(
       path.join(".artifacts", "package-browser-build.json"),
       "utf8",
     );
     const manifest = path.join(directory, "stale.json");
-    for (const input of [
-      "scripts/build-script-source.mjs",
-      "packages/client/dist/index.js",
-      "packages/client/dist/browser/sefaria-api-client.js",
-      "packages/client/dist/browser/THIRD-PARTY-NOTICES.txt",
-    ]) {
-      const evidence: { inputs: Record<string, string> } = JSON.parse(source);
-      expect(evidence.inputs).toHaveProperty(input);
-      evidence.inputs[input] = "0".repeat(64);
-      await writeFile(manifest, JSON.stringify(evidence));
-      await expect(
-        buildScriptSource({
-          destination: path.join(directory, "stale"),
-          browserBuildManifest: manifest,
-        }),
-      ).rejects.toThrow(input);
-      expect(build).not.toHaveBeenCalled();
-    }
+    const evidence: { inputs: Record<string, string> } = JSON.parse(source);
+    expect(evidence.inputs).toHaveProperty(input);
+    evidence.inputs[input] = "0".repeat(64);
+    await writeFile(manifest, JSON.stringify(evidence));
+    await expect(
+      buildScriptSource({
+        destination: path.join(directory, "stale"),
+        browserBuildManifest: manifest,
+      }),
+    ).rejects.toThrow(input);
+    expect(build).not.toHaveBeenCalled();
   });
 
-  it("rejects incomplete, malformed, and escaping build evidence before assembly", async () => {
+  type Evidence = {
+    schemaVersion: number;
+    inputs: Record<string, string>;
+    dependencies: Array<{ name: string; directory: string }>;
+  };
+  it.each<{
+    name: string;
+    error: string;
+    mutate: (evidence: Evidence) => void;
+  }>([
+    {
+      name: "missing license fingerprint",
+      error: "Incomplete packaged browser build",
+      mutate: (evidence) => {
+        delete evidence.inputs.LICENSE;
+      },
+    },
+    {
+      name: "escaping input path",
+      error: "Expected a repository-relative path",
+      mutate: (evidence) => {
+        evidence.inputs["../outside.txt"] = "0".repeat(64);
+      },
+    },
+    {
+      name: "stale dependency identity",
+      error: "Stale dependency identity",
+      mutate: (evidence) => {
+        evidence.dependencies[0].name = "@invalid/identity";
+      },
+    },
+    {
+      name: "escaping dependency directory",
+      error: "Expected a repository-relative path",
+      mutate: (evidence) => {
+        evidence.dependencies[0].directory = "../outside";
+      },
+    },
+  ])("rejects $name before assembly", async ({ error, mutate }) => {
     const original = await readFile(
       path.join(".artifacts", "package-browser-build.json"),
       "utf8",
     );
     const filename = path.join(directory, "invalid.json");
-    type Evidence = {
-      schemaVersion: number;
-      inputs: Record<string, string>;
-      dependencies: Array<{ name: string; directory: string }>;
-    };
-    const mutations: Array<[string, (evidence: Evidence) => void]> = [
-      [
-        "Incomplete packaged browser build",
-        (evidence) => {
-          delete evidence.inputs.LICENSE;
-        },
-      ],
-      [
-        "Expected a repository-relative path",
-        (evidence) => {
-          evidence.inputs["../outside.txt"] = "0".repeat(64);
-        },
-      ],
-      [
-        "Stale dependency identity",
-        (evidence) => {
-          evidence.dependencies[0].name = "@invalid/identity";
-        },
-      ],
-      [
-        "Expected a repository-relative path",
-        (evidence) => {
-          evidence.dependencies[0].directory = "../outside";
-        },
-      ],
-    ];
-    for (const [error, mutate] of mutations) {
-      const evidence: Evidence = JSON.parse(original);
-      mutate(evidence);
-      await writeFile(filename, JSON.stringify(evidence));
-      await expect(
-        buildScriptSource({
-          destination: path.join(directory, "invalid"),
-          browserBuildManifest: filename,
-        }),
-      ).rejects.toThrow(error);
-      expect(build).not.toHaveBeenCalled();
-    }
+    const evidence: Evidence = JSON.parse(original);
+    mutate(evidence);
+    await writeFile(filename, JSON.stringify(evidence));
+    await expect(
+      buildScriptSource({
+        destination: path.join(directory, "invalid"),
+        browserBuildManifest: filename,
+      }),
+    ).rejects.toThrow(error);
+    expect(build).not.toHaveBeenCalled();
   });
 });
 
