@@ -38,7 +38,7 @@ For reader-oriented explanations, use the friendly guides rather than the archiv
 
 | Area | Baseline status |
 | --- | --- |
-| `packages/client` | Delivers all 60 operations in the pinned OpenAPI through 11 tag namespaces, committed corrected TypeScript contracts, reusable transport schemas, Zod validators, JSON and PNG response handling, and a status-aware fetch client with a bounded default-on per-client response cache. The corrected OpenAPI document is temporary generation output. A weekly workflow reports upstream OpenAPI drift in one issue and can hand it to a Copilot triage agent that proposes a draft refresh. |
+| `packages/client` | Delivers all 61 operations in the pinned OpenAPI through 11 tag namespaces, committed corrected TypeScript contracts, reusable transport schemas, Zod validators, JSON and PNG response handling, and a status-aware fetch client with a bounded default-on per-client response cache. The corrected OpenAPI document is temporary generation output. A weekly workflow reports upstream OpenAPI drift in one issue and can hand it to a Copilot triage agent that proposes a draft refresh. |
 | `packages/text-transform` | Delivers DOM-free sanitization, Hebrew vocalization modes, structured footnote extraction, and bounded connected-text previews. |
 | `packages/web-components` | Delivers five declarative elements with standalone `sref`, authoritative raw `data` for Text Segment, Bilingual Segment, and Source Card, local-data capabilities for mutable Reader and Connections Panel flows, tagged source, read-only status and diagnostics, lifecycle reconnect, error events, private preparation, shared raw Reader source qualification, and the supported advanced DOM-free Reader semantic/raw facade. |
 | `examples/explorer` | Provides one developer surface for supplied-data authored states and click-to-start live pages for text segments, bilingual segments, source cards, and contextual connections. Opening a live route makes no Sefaria request before activation. |
@@ -313,7 +313,7 @@ pnpm --filter @sefaria-example/mcp-app demo
 The refresh operation requires a complete Sefaria commit SHA. It can access the network.
 
 ```powershell
-pnpm openapi:refresh --commit 898feda78d1bd6b24f66305081a54c8cf36406be
+pnpm openapi:refresh --commit 26503349c8c5d54567fb53c52619ebcca225c484
 ```
 
 The operation downloads only the OpenAPI document from that commit. It validates the formal overlay guards before updating the committed pin, upstream input, SHA-256, and generated TypeScript.

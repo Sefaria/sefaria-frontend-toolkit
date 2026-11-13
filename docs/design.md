@@ -24,7 +24,7 @@ The connections panel, standalone contextual reader, DOM-free Reader session, st
 
 ## Source authority
 
-The repository specifications define intended behavior. The [pinned Sefaria OpenAPI document](https://github.com/Sefaria/Sefaria-Project/blob/898feda78d1bd6b24f66305081a54c8cf36406be/docs/openAPI.json), original endpoint implementation, upstream tests, and deployed fixtures provide evidence.
+The repository specifications define intended behavior. The [pinned Sefaria OpenAPI document](https://github.com/Sefaria/Sefaria-Project/blob/26503349c8c5d54567fb53c52619ebcca225c484/docs/openAPI.json), original endpoint implementation, upstream tests, and deployed fixtures provide evidence.
 
 The pinned OpenAPI input plus guarded overlay is the machine-readable authority for transport payloads. Generated declarations are the field-level reference for those payloads.
 
@@ -98,7 +98,7 @@ Solid arrows show runtime dependencies. Dotted arrows show build-time or type-on
 
 ## OpenAPI supply chain
 
-`@sefaria/api-client` owns one committed upstream OpenAPI input from Sefaria commit `898feda78d1bd6b24f66305081a54c8cf36406be`. A committed checksum makes accidental input changes visible.
+`@sefaria/api-client` owns one committed upstream OpenAPI input from Sefaria commit `26503349c8c5d54567fb53c52619ebcca225c484`. A committed checksum makes accidental input changes visible.
 
 An explicit refresh operation can access the network. Ordinary generation reads only committed files.
 

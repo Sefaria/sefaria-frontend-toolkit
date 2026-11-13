@@ -2,7 +2,7 @@
   "lexicon-entry-bdb-2026-11-12.json": {
     "source": "https://www.sefaria.org/api/lexicon-entry/BDB%20Dictionary/%EF%AC%AF%D7%91",
     "capturedAt": "2026-11-12",
-    "reduction": "Unmodified deployed HTTP 200 JSON payload, reformatted only. Investigation evidence, not an accepted generated contract: the current pin has no status schema for this operation. The presentation-form headword U+FB2F followed by U+05D1 is NFC-normalized by the server to U+05D0 U+05B8 U+05D1."
+    "reduction": "Unmodified deployed HTTP 200 JSON payload, reformatted only. Accepted by the generated schema and cache-disabled SDK for the refreshed pin; arbitrary nested raw entry fields are preserved. The presentation-form headword U+FB2F followed by U+05D1 is NFC-normalized by the server to U+05D0 U+05B8 U+05D1."
   },
   "v3-text-spanning-2026-08-29.json": {
     "source": "https://www.sefaria.org/api/v3/texts/Genesis%201:31-2:2?version=primary",

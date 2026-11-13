@@ -43,13 +43,13 @@ Source-backed Sefaria API client with generated contracts, validators, and bound
 
 | Import path | Exports |
 | --- | --- |
-| `@sefaria/api-client` | 585 names; see the [client reference](/reference/client.md) |
+| `@sefaria/api-client` | 598 names; see the [client reference](/reference/client.md) |
 | `@sefaria/api-client/client` | `SefariaCacheOptions`, `SefariaClient`, `SefariaClientOptions`, `createSefariaClient`, `requireSefariaClient` |
-| `@sefaria/api-client/contracts` | 313 names; see the [client reference](/reference/client.md) |
+| `@sefaria/api-client/contracts` | 320 names; see the [client reference](/reference/client.md) |
 | `@sefaria/api-client/errors` | `ContractIssue`, `SefariaContractError`, `SefariaContractErrorOptions` |
-| `@sefaria/api-client/schemas` | 181 names; see the [client reference](/reference/client.md) |
+| `@sefaria/api-client/schemas` | 184 names; see the [client reference](/reference/client.md) |
 | `@sefaria/api-client/validation` | `GeneratedResponseContract`, `ResponseSelector`, `ResponseValidationContext`, `ResponseValidatorLookup`, `ValidationResult`, `getResponseContract`, `getResponseValidator`, `validateExternalResponse`, `validateResponse` |
-| `@sefaria/api-client/validators` | 65 names; see the [client reference](/reference/client.md) |
+| `@sefaria/api-client/validators` | 68 names; see the [client reference](/reference/client.md) |
 
 ## `@sefaria/text-transform`
 

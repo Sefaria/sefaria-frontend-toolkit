@@ -380,7 +380,7 @@ describe("R2 client reference", () => {
         count += 1;
       }
     }
-    expect(count).toBe(60);
+    expect(count).toBe(61);
     for (const name of [
       "createSefariaClient",
       "SefariaClientOptions",
