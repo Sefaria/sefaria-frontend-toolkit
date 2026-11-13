@@ -678,9 +678,9 @@ export function extractApiDocument(document: JsonObject): JsonObject {
     }
   }
   const operations = collectApiOperations(api);
-  if (operations.length !== 60) {
+  if (operations.length !== 61) {
     throw new Error(
-      `Expected 60 generated OpenAPI operations, received ${operations.length}.`,
+      `Expected 61 generated OpenAPI operations, received ${operations.length}.`,
     );
   }
   const namespaces = collectNamespaceOperations(operations);
@@ -753,10 +753,14 @@ function collectResponseContracts(
   operations: readonly ApiOperationMetadata[],
 ): readonly ResponseContractMetadata[] {
   assertRecord(document.paths, "Corrected API paths");
+  assertRecord(document.components, "Corrected API components");
+  assertRecord(document.components.schemas, "Corrected API schemas");
+  const paths: Record<string, unknown> = document.paths;
+  const schemas: Record<string, unknown> = document.components.schemas;
   const metadata: ResponseContractMetadata[] = [];
 
   for (const expected of operations) {
-    const pathItem = document.paths[expected.path];
+    const pathItem = paths[expected.path];
     assertRecord(pathItem, `API path ${expected.path}`);
     const operation = pathItem[expected.method];
     const method = expected.method.toUpperCase() as "GET" | "POST";
@@ -831,13 +835,26 @@ function collectResponseContracts(
           `${method} ${expected.path} ${statusText} is missing a JSON response schema.`,
         );
       }
-      const validatorExport =
-        isRecord(mediaValue.schema) &&
-        typeof mediaValue.schema.$ref === "string"
-          ? componentValidatorExport(mediaValue.schema)
-          : status >= 200 && status < 300
-            ? `z${pascalCase(expected.operationId)}Response`
-            : componentValidatorExport(mediaValue.schema);
+      let validatorExport: string;
+      if (typeof mediaValue.schema.$ref !== "string" && status >= 300) {
+        const component = `${pascalCase(expected.operationId)}Response${status}`;
+        if (Object.hasOwn(schemas, component)) {
+          throw new Error(
+            `Generated response schema component collision: ${component}.`,
+          );
+        }
+        // Keep the transport declaration inline; the plugin emits this exact copy.
+        schemas[component] = structuredClone(mediaValue.schema);
+        validatorExport = componentValidatorExport({
+          $ref: `#/components/schemas/${component}`,
+        });
+      } else {
+        validatorExport =
+          isRecord(mediaValue.schema) &&
+          typeof mediaValue.schema.$ref === "string"
+            ? componentValidatorExport(mediaValue.schema)
+            : `z${pascalCase(expected.operationId)}Response`;
+      }
       const validatorName = validatorFunctionName(
         expected.functionName,
         status,
@@ -1399,12 +1416,12 @@ export async function generateArtifacts(
   const api = withGenerationMetadata(extractApiDocument(corrected), source);
   validateOpenApi30NullSemantics(api);
   const operations = collectApiOperations(api);
+  const contracts = collectResponseContracts(api, operations);
   const correctedApi = await formatGeneratedFile(
     JSON.stringify(api),
     "openapi/corrected-api.json",
     "json",
   );
-  const contracts = collectResponseContracts(api, operations);
   const artifacts = new Map<string, string>();
 
   for (const [path, contents] of await generateHeyApiArtifacts(

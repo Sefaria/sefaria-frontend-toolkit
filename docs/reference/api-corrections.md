@@ -23,11 +23,11 @@ Install an exact npm version or use a version-pinned npm CDN module. The npm `al
 
 ## The pinned source
 
-The corrections apply to [`docs/openAPI.json`](https://github.com/Sefaria/Sefaria-Project/blob/898feda78d1bd6b24f66305081a54c8cf36406be/docs/openAPI.json) in `Sefaria/Sefaria-Project` at commit `898feda78d1bd6b24f66305081a54c8cf36406be`. The downloaded file must have the SHA-256 digest `3a6057ad40ca8e7874d6be97ed2491926818e3a6939c61cca67c9878da9aa4ab`.
+The corrections apply to [`docs/openAPI.json`](https://github.com/Sefaria/Sefaria-Project/blob/26503349c8c5d54567fb53c52619ebcca225c484/docs/openAPI.json) in `Sefaria/Sefaria-Project` at commit `26503349c8c5d54567fb53c52619ebcca225c484`. The downloaded file must have the SHA-256 digest `ae477027ea7d147ed5149687d49b1e11d724a73d286833f6bde40abd0f4f803d`.
 
 Each correction has source checks. The checks inspect the parts of Sefaria's file that the correction uses. They require each part to be absent or unchanged since the correction was written. The checks don't prove that the correction is still needed. If a check fails, client generation stops.
 
-There are 12 corrections, with 83 changes in total. They affect 19 of the client's 60 endpoints.
+There are 12 corrections, with 83 changes in total. They affect 19 of the client's 61 endpoints.
 
 ## Corrections by endpoint
 
