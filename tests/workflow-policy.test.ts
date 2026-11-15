@@ -95,7 +95,7 @@ describe("exact release and validation workflow contracts", () => {
         const script = image.run.slice('node -e "'.length, -1);
         for (const ImageOS of ["ubuntu24", "ubuntu26"]) {
           execFileSync(process.execPath, ["-e", script], {
-            env: { ...process.env, ImageOS, GITHUB_OUTPUT: output },
+            env: { ImageOS, GITHUB_OUTPUT: output },
           });
         }
         expect(readFileSync(output, "utf8")).toBe(
@@ -103,7 +103,7 @@ describe("exact release and validation workflow contracts", () => {
         );
         expect(() =>
           execFileSync(process.execPath, ["-e", script], {
-            env: { ...process.env, ImageOS: "", GITHUB_OUTPUT: output },
+            env: { ImageOS: "", GITHUB_OUTPUT: output },
             stdio: "pipe",
           }),
         ).toThrow();
