@@ -18,6 +18,9 @@ import {
   validateGetIndexV2200,
   validateGetLinks200,
   validateGetLinks400,
+  validateGetLexiconEntry200,
+  validateGetLexiconEntry404,
+  validateGetLexiconEntry409,
   validateGetRef200,
   validateGetRef404,
   validateGetShape200,
@@ -59,6 +62,38 @@ async function readFixture(name: string): Promise<unknown> {
 }
 
 describe("public generated response validators", () => {
+  it("preserves the complete captured lexicon payload at the external boundary", async () => {
+    const payload = await readFixture("lexicon-entry-bdb-2026-11-12.json");
+    const contract = getResponseContract({
+      method: "GET",
+      path: "/api/lexicon-entry/{lexicon}/{headword}",
+      status: 200,
+    });
+    expect(contract?.schema?.parse(payload)).toEqual(payload);
+  });
+
+  it("keeps lexicon wrapper and error fields optional without accepting malformed fields", () => {
+    for (const payload of [{}, { entry: {} }, { content_attr_names: [] }]) {
+      expect(validateGetLexiconEntry200(payload)).toBe(true);
+    }
+    for (const entry of [null, [], "entry", 3]) {
+      expect(validateGetLexiconEntry200({ entry })).toBe(false);
+    }
+    expect(validateGetLexiconEntry200({ content_attr_names: [3] })).toBe(false);
+    expect(validateGetLexiconEntry200({ content_attr_names: "content" })).toBe(
+      false,
+    );
+    for (const validate of [
+      validateGetLexiconEntry404,
+      validateGetLexiconEntry409,
+    ]) {
+      expect(validate({})).toBe(true);
+      expect(validate({ error: "missing" })).toBe(true);
+      expect(validate({ error: 3 })).toBe(false);
+      expect(validate({ error: null })).toBe(false);
+    }
+  });
+
   it("distinguishes the dated calendar invalid-parameter response from a successful parasha", async () => {
     const error = await readFixture("calendar-parasha-error-2026-09-29.json");
     const contract = getResponseContract({

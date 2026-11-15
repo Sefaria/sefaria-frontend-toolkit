@@ -38,7 +38,7 @@ For reader-oriented explanations, use the friendly guides rather than the archiv
 
 | Area | Baseline status |
 | --- | --- |
-| `packages/client` | Delivers all 60 operations in the pinned OpenAPI through 11 tag namespaces, committed corrected TypeScript contracts, reusable transport schemas, Zod validators, JSON and PNG response handling, and a status-aware fetch client with a bounded default-on per-client response cache. The corrected OpenAPI document is temporary generation output. A weekly workflow reports upstream OpenAPI drift in one issue and can hand it to a Copilot triage agent that proposes a draft refresh. |
+| `packages/client` | Delivers all 61 operations in the pinned OpenAPI through 11 tag namespaces, committed corrected TypeScript contracts, reusable transport schemas, Zod validators, JSON and PNG response handling, and a status-aware fetch client with a bounded default-on per-client response cache. The corrected OpenAPI document is temporary generation output. A weekly workflow reports upstream OpenAPI drift in one issue and can hand it to a Copilot triage agent that proposes a draft refresh. |
 | `packages/text-transform` | Delivers DOM-free sanitization, Hebrew vocalization modes, structured footnote extraction, and bounded connected-text previews. |
 | `packages/web-components` | Delivers five declarative elements with standalone `sref`, authoritative raw `data` for Text Segment, Bilingual Segment, and Source Card, local-data capabilities for mutable Reader and Connections Panel flows, tagged source, read-only status and diagnostics, lifecycle reconnect, error events, private preparation, shared raw Reader source qualification, and the supported advanced DOM-free Reader semantic/raw facade. |
 | `examples/explorer` | Provides one developer surface for supplied-data authored states and click-to-start live pages for text segments, bilingual segments, source cards, and contextual connections. Opening a live route makes no Sefaria request before activation. |
@@ -247,7 +247,7 @@ The current command runs Prettier and Oxlint first, then stale-OpenAPI and integ
 
 Every run writes a bounded machine-readable result to `.artifacts/check/result.json`. CI uploads that result and allowlisted browser diagnostics only after a platform failure. A Linux success cannot hide a Windows failure: the required `check` aggregation succeeds only when the complete matrix succeeds.
 
-Pages runs the complete `pnpm check` on its explicitly selected source with `/sefaria-frontend-toolkit/` as the base. A second site-only build binds either candidate-local modules or the selected exact npm version before acceptance/upload. The main controller and documentation checkout are separate and pinned within each run. CI and Pages cache Playwright browsers by operating system and lockfile hash. `pnpm setup:agent` still runs its three-browser launch probe.
+Pages runs the complete `pnpm check` on its explicitly selected source with `/sefaria-frontend-toolkit/` as the base. A second site-only build binds either candidate-local modules or the selected exact npm version before acceptance/upload. The main controller and documentation checkout are separate and pinned within each run. CI and Pages cache Playwright browsers by operating system, architecture, hosted runner image (`ImageOS`) and lockfile hash, without broader restore keys. Browser revisions can remain the same across Linux distributions while their required system libraries differ; an Ubuntu image upgrade must not restore binaries built for the previous distribution. `pnpm setup:agent` still installs Linux system dependencies and runs its three-browser launch probe.
 
 ### Documentation-site inner loop
 
@@ -278,6 +278,8 @@ Run all TypeScript tests:
 ```powershell
 pnpm test
 ```
+
+Vitest runs at most four workers by default, or fewer on smaller machines. This keeps parallel Git subprocesses, filesystem validation and browser work from overwhelming local resources; test timeouts and assertions are unchanged. Use Vitest's `--maxWorkers` option for targeted concurrency diagnostics, for example `pnpm test -- --maxWorkers=1`. Independent build-evidence corruption cases run as separate tests so each receives its own timeout and failure report.
 
 Run the current focused compatibility qualification:
 
@@ -313,7 +315,7 @@ pnpm --filter @sefaria-example/mcp-app demo
 The refresh operation requires a complete Sefaria commit SHA. It can access the network.
 
 ```powershell
-pnpm openapi:refresh --commit 898feda78d1bd6b24f66305081a54c8cf36406be
+pnpm openapi:refresh --commit 26503349c8c5d54567fb53c52619ebcca225c484
 ```
 
 The operation downloads only the OpenAPI document from that commit. It validates the formal overlay guards before updating the committed pin, upstream input, SHA-256, and generated TypeScript.

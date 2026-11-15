@@ -308,7 +308,7 @@ Non-throwing validation result for externally supplied response-shaped JSON.
 
 ## Generated functions by namespace
 
-The client has 60 generated functions, one for each endpoint in the corrected API description. The functions are grouped into namespaces that follow the sections of [Sefaria's API](https://developers.sefaria.org/), and each namespace is exported from the package root. Call a function with a client and its request options, for example `text.getV3Texts({ client, path: { tref: "Micah 6:8" } })`.
+The client has 61 generated functions, one for each endpoint in the corrected API description. The functions are grouped into namespaces that follow the sections of [Sefaria's API](https://developers.sefaria.org/), and each namespace is exported from the package root. Call a function with a client and its request options, for example `text.getV3Texts({ client, path: { tref: "Micah 6:8" } })`.
 
 - **Options type** describes the path, query, and body options that the function accepts.
 - **Responses type** maps each documented success status to its response body. **Errors type**, where there is one, does the same for documented error statuses.
@@ -369,6 +369,7 @@ The client has 60 generated functions, one for each endpoint in the corrected AP
 | Function | Request | Summary | Options type | Responses type | Errors type | Validators |
 | --- | --- | --- | --- | --- | --- | --- |
 | `lexicon.getWords` | `GET /api/words/{word}` | Lexicon | `GetWordsData` | `GetWordsResponses` | — | `validateGetWords200` (200) |
+| `lexicon.getLexiconEntry` | `GET /api/lexicon-entry/{lexicon}/{headword}` | Get a lexicon entry | `GetLexiconEntryData` | `GetLexiconEntryResponses` | `GetLexiconEntryErrors` | `validateGetLexiconEntry200` (200)<br>`validateGetLexiconEntry404` (404)<br>`validateGetLexiconEntry409` (409) |
 | `lexicon.getWordsCompletion` | `GET /api/words/completion/{word}/{lexicon}` | Word Completion | `GetWordsCompletionData` | `GetWordsCompletionResponses` | — | `validateGetWordsCompletion200` (200) |
 
 ### `topic`

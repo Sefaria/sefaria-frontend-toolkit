@@ -34,6 +34,9 @@ import {
   type GetLinksErrors,
   type GetLinksData,
   type GetLinksResponses,
+  type GetLexiconEntryData,
+  type GetLexiconEntryErrors,
+  type GetLexiconEntryResponses,
   type GetShapeData,
   type GetTextVersionsData,
   type GetV3TextsData,
@@ -69,13 +72,31 @@ describe("generated request and response contracts", () => {
     expect(Object.values(index)).toHaveLength(10);
     expect(Object.values(related)).toHaveLength(5);
     expect(Object.values(calendars)).toHaveLength(5);
-    expect(Object.values(lexicon)).toHaveLength(2);
+    expect(Object.values(lexicon)).toHaveLength(3);
     expect(Object.values(topic)).toHaveLength(6);
     expect(Object.values(term)).toHaveLength(2);
     expect(Object.values(sheets)).toHaveLength(11);
     expect(Object.values(collections)).toHaveLength(3);
     expect(Object.values(misc)).toHaveLength(6);
     expect(Object.values(ref)).toHaveLength(1);
+  });
+
+  it("exposes required lexicon path inputs, open optional entry data and distinct error statuses", () => {
+    expectTypeOf<GetLexiconEntryData["path"]>().toEqualTypeOf<{
+      lexicon: string;
+      headword: string;
+    }>();
+    expectTypeOf<GetLexiconEntryResponses[200]>().toEqualTypeOf<{
+      entry?: { [key: string]: unknown };
+      content_attr_names?: string[];
+    }>();
+    expectTypeOf<keyof GetLexiconEntryErrors>().toEqualTypeOf<404 | 409>();
+    expectTypeOf<GetLexiconEntryErrors[404]>().toEqualTypeOf<{
+      error?: string;
+    }>();
+    expectTypeOf<GetLexiconEntryErrors[409]>().toEqualTypeOf<{
+      error?: string;
+    }>();
   });
 
   it("uses tref and typed query arguments", () => {

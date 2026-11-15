@@ -1,4 +1,6 @@
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import YAML from "yaml";
 import { describe, expect, it } from "vitest";
@@ -65,6 +67,51 @@ describe("exact release and validation workflow contracts", () => {
         0,
       );
   });
+
+  it.each([
+    ["validate-toolkit.yml", "validation"],
+    ["pages.yml", "build"],
+  ])(
+    "isolates %s browser caches by runner image and architecture",
+    (name, job) => {
+      const steps = YAML.parse(read(name)).jobs[job].steps;
+      const cache = steps.find(
+        (step: { uses?: string; with?: { key?: string } }) =>
+          step.uses === "actions/cache@v4" &&
+          step.with?.key?.startsWith("playwright-"),
+      );
+      expect(cache.with.key).toContain("${{ runner.arch }}");
+      expect(cache.with.key).toContain(
+        "${{ steps.browser-image.outputs.image }}",
+      );
+      expect(cache.with).not.toHaveProperty("restore-keys");
+      const image = steps.find(
+        (step: { id?: string }) => step.id === "browser-image",
+      );
+      expect(steps.indexOf(image)).toBeLessThan(steps.indexOf(cache));
+      const directory = mkdtempSync(path.join(tmpdir(), "browser-image-"));
+      const output = path.join(directory, "output");
+      try {
+        const script = image.run.slice('node -e "'.length, -1);
+        for (const ImageOS of ["ubuntu24", "ubuntu26"]) {
+          execFileSync(process.execPath, ["-e", script], {
+            env: { ImageOS, GITHUB_OUTPUT: output },
+          });
+        }
+        expect(readFileSync(output, "utf8")).toBe(
+          "image=ubuntu24\nimage=ubuntu26\n",
+        );
+        expect(() =>
+          execFileSync(process.execPath, ["-e", script], {
+            env: { ImageOS: "", GITHUB_OUTPUT: output },
+            stdio: "pipe",
+          }),
+        ).toThrow();
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
+    },
+  );
 
   it("captures exact package assets before approval and never builds or packs in publication", () => {
     const jobs = YAML.parse(release).jobs;

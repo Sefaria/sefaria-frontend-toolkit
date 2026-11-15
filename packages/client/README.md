@@ -4,7 +4,7 @@
 
 # @sefaria/api-client
 
-Fetches Sefaria API responses and checks them against a corrected API description before your code uses them. It has 60 generated functions grouped by Sefaria's API sections and a bounded per-client response cache.
+Fetches Sefaria API responses and checks them against a corrected API description before your code uses them. The current source has 61 generated functions grouped by Sefaria's API sections and a bounded per-client response cache. The added `lexicon.getLexiconEntry` operation is not yet in the numbered npm release below.
 
 A community-driven project with Sefaria backing and support. The toolkit is experimental; names and APIs may change.
 

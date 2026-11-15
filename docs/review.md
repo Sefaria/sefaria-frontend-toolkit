@@ -75,7 +75,8 @@ Review the initial and expanded corrections for:
 ## Thin client
 
 - [ ] The public client uses generated operations directly.
-- [ ] All 60 operations are reachable exactly once through the 11 generated tag namespaces.
+- [ ] All 61 operations are reachable exactly once through the 11 generated tag namespaces.
+- [ ] Inline error schemas retain their transport declaration, have collision-checked generation-only components, and select precise status-specific validators.
 - [ ] Former flat endpoint exports are absent.
 - [ ] The client accepts a configurable base URL.
 - [ ] The client accepts an injectable `fetch`.

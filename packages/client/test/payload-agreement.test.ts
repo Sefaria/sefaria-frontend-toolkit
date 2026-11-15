@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import fixtureManifest from "./fixtures/manifest.json" with { type: "json" };
 import indexGenesisFixture from "./fixtures/index-genesis-2026-09-01.json" with { type: "json" };
+import lexiconEntryFixture from "./fixtures/lexicon-entry-bdb-2026-11-12.json" with { type: "json" };
 import {
+  type GetLexiconEntryResponses,
   type GetIndexV2Responses,
   type GetShapeResponses,
   validateGetIndexV2200,
   validateGetShape200,
+  validateGetLexiconEntry200,
 } from "../src/index.js";
 
 const coreOperationFixturePaths = [
@@ -21,6 +24,12 @@ const coreOperationFixturePaths = [
 ] as const;
 
 describe("generated payload type and validator agreement", () => {
+  it("accepts the complete dated BDB entry statically and at runtime", () => {
+    const response =
+      lexiconEntryFixture satisfies GetLexiconEntryResponses[200];
+    expect(validateGetLexiconEntry200(response)).toBe(true);
+  });
+
   it("accepts the Genesis index fixture statically and at runtime", () => {
     const response = indexGenesisFixture satisfies GetIndexV2Responses[200];
 

@@ -11,7 +11,9 @@ import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { resolve } from "node:path";
 
+import ts from "typescript";
 import { beforeAll, describe, expect, it, vi } from "vitest";
+import type { ZodType } from "zod";
 
 import {
   applyFormalOverlay,
@@ -153,6 +155,94 @@ beforeAll(async () => {
 }, 30_000);
 
 describe("OpenAPI generation", () => {
+  it("generates precise validators for incompatible inline error statuses", async () => {
+    const document = JSON.parse(
+      new TextDecoder().decode(upstream),
+    ) as JsonObject;
+    const operation = (
+      (document.paths as JsonObject)["/api/words/{word}"] as JsonObject
+    ).get as JsonObject;
+    const responses = operation.responses as JsonObject;
+    for (const [status, schema] of [
+      [
+        "404",
+        {
+          type: "object",
+          required: ["missing"],
+          properties: { missing: { type: "string" } },
+        },
+      ],
+      [
+        "409",
+        {
+          type: "object",
+          required: ["matches"],
+          properties: { matches: { type: "integer" } },
+        },
+      ],
+    ] satisfies [string, JsonObject][]) {
+      responses[status] = {
+        description: "Status-specific generation regression",
+        content: { "application/json": { schema } },
+      };
+    }
+    const bytes = JSON.stringify(document);
+    const generated = await generateArtifacts(
+      { ...source, sha256: sha256(bytes) },
+      bytes,
+      overlay,
+    );
+    const zodSource = generated.get("src/generated/zod.gen.ts");
+    expect(zodSource).toBeDefined();
+    const compiled = ts.transpileModule(zodSource!, {
+      compilerOptions: {
+        module: ts.ModuleKind.CommonJS,
+        target: ts.ScriptTarget.ES2022,
+      },
+    }).outputText;
+    const schemas: Record<string, ZodType> = {};
+    new Function("require", "exports", compiled)(require, schemas);
+    const missing = schemas.zGetWordsResponse404!;
+    const duplicate = schemas.zGetWordsResponse409!;
+    expect(missing.safeParse({ missing: "headword" }).success).toBe(true);
+    expect(duplicate.safeParse({ matches: 2 }).success).toBe(true);
+    expect(missing.safeParse({ matches: 2 }).success).toBe(false);
+    expect(duplicate.safeParse({ missing: "headword" }).success).toBe(false);
+    expect(missing.safeParse({ missing: 2 }).success).toBe(false);
+    expect(duplicate.safeParse({ matches: "2" }).success).toBe(false);
+    const contracts = generated.get("src/generated/response-contracts.gen.ts");
+    expect(contracts).toMatch(
+      /status: 404,[\s\S]*?schema: zGetWordsResponse404/,
+    );
+    expect(contracts).toMatch(
+      /status: 409,[\s\S]*?schema: zGetWordsResponse409/,
+    );
+  }, 15_000);
+
+  it("rejects a generated inline response component name collision", async () => {
+    const document = JSON.parse(
+      new TextDecoder().decode(upstream),
+    ) as JsonObject;
+    const schemas = (document.components as JsonObject).schemas as JsonObject;
+    schemas.GetLexiconEntryResponse404 = { type: "string" };
+    const bytes = JSON.stringify(document);
+    await expect(
+      generateArtifacts({ ...source, sha256: sha256(bytes) }, bytes, overlay),
+    ).rejects.toThrow(
+      "Generated response schema component collision: GetLexiconEntryResponse404.",
+    );
+  });
+
+  it("retains an exact operation-count guard after refresh", () => {
+    const document = structuredClone(core);
+    delete (document.paths as JsonObject)[
+      "/api/lexicon-entry/{lexicon}/{headword}"
+    ];
+    expect(() => extractApiDocument(document)).toThrow(
+      "Expected 61 generated OpenAPI operations, received 60.",
+    );
+  });
+
   it("models the source-backed parasha diaspora choice without changing its response", () => {
     const operation = (
       (core.paths as JsonObject)["/api/calendars/topics/parasha"] as JsonObject
@@ -346,8 +436,8 @@ describe("OpenAPI generation", () => {
     const operations = collectApiOperations(core);
     const namespaces = collectNamespaceOperations(operations);
 
-    expect(operations).toHaveLength(60);
-    expect(Object.keys(core.paths as object)).toHaveLength(60);
+    expect(operations).toHaveLength(61);
+    expect(Object.keys(core.paths as object)).toHaveLength(61);
     expect(Object.keys(namespaces)).toEqual([
       "text",
       "index",
@@ -362,7 +452,7 @@ describe("OpenAPI generation", () => {
       "ref",
     ]);
     expect(Object.values(namespaces).map((items) => items.length)).toEqual([
-      9, 10, 5, 5, 2, 6, 2, 11, 3, 6, 1,
+      9, 10, 5, 5, 3, 6, 2, 11, 3, 6, 1,
     ]);
   });
 
@@ -442,9 +532,9 @@ describe("OpenAPI generation", () => {
   it("uses the exact pinned upstream checksum", () => {
     expect(sha256(upstream)).toBe(source.sha256);
     expect(source).toMatchObject({
-      commit: "898feda78d1bd6b24f66305081a54c8cf36406be",
+      commit: "26503349c8c5d54567fb53c52619ebcca225c484",
       sha256:
-        "3a6057ad40ca8e7874d6be97ed2491926818e3a6939c61cca67c9878da9aa4ab",
+        "ae477027ea7d147ed5149687d49b1e11d724a73d286833f6bde40abd0f4f803d",
     });
   });
 

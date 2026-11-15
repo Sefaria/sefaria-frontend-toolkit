@@ -19,7 +19,7 @@ The toolkit keeps a copy of Sefaria's description. It doesn't fetch a new one at
 From that copy, `pnpm openapi:generate` produces:
 
 - the types
-- one function for each of the 60 operations
+- one function for each of the 61 operations
 - the schemas and response validators
 
 A schema states which fields a JSON body must have and what type each one is. Generated files sit under `packages/client/src/generated`. Each has a header that says "Do not edit" and names the Sefaria commit. Running `pnpm openapi:check` regenerates the files and fails if the committed ones are stale.

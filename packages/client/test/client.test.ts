@@ -5,6 +5,7 @@ import {
   calendars,
   createSefariaClient,
   index,
+  lexicon,
   misc,
   ref,
   related,
@@ -18,6 +19,7 @@ import {
   validateResponse,
   type ResponseValidatorLookup,
 } from "../src/validation.js";
+import lexiconEntryFixture from "./fixtures/lexicon-entry-bdb-2026-11-12.json" with { type: "json" };
 
 const { getIndexV2, getShape } = index;
 const { getAsyncTaskStatus, getImgGen, postFindRefs } = misc;
@@ -42,6 +44,84 @@ function jsonResponse(
 }
 
 describe("generated Sefaria SDK", () => {
+  it("preserves the captured raw lexicon entry through an encoded SDK request", async () => {
+    const path = {
+      lexicon: lexiconEntryFixture.entry.parent_lexicon,
+      headword: "\uFB2F\u05D1",
+    };
+    const fetchMock = vi.fn<typeof fetch>(async () =>
+      jsonResponse(lexiconEntryFixture),
+    );
+    const client = createSefariaClient({
+      baseUrl: "https://example.test",
+      fetch: fetchMock,
+      cache: false,
+    });
+    const result = await lexicon.getLexiconEntry({ client, path });
+    expect(result.data).toEqual(lexiconEntryFixture);
+    const request = fetchMock.mock.calls[0]?.[0];
+    expect(request instanceof Request ? request.url : String(request)).toBe(
+      `https://example.test/api/lexicon-entry/${encodeURIComponent(path.lexicon)}/${encodeURIComponent(path.headword)}`,
+    );
+  });
+
+  it.each([404, 409])(
+    "preserves a documented lexicon HTTP %i as a typed error",
+    async (status) => {
+      const body = {
+        error:
+          status === 404
+            ? "Entry not found."
+            : "More than one entry currently matches this headword.",
+      };
+      const client = createSefariaClient({
+        fetch: async () => jsonResponse(body, status),
+        cache: false,
+      });
+      const result = await lexicon.getLexiconEntry({
+        client,
+        path: { lexicon: "BDB Dictionary", headword: "missing" },
+      });
+      expect(result.error).toEqual(body);
+      expect(result.data).toBeUndefined();
+      expect(result.response.status).toBe(status);
+    },
+  );
+
+  it.each([
+    {
+      status: 200,
+      body: { entry: [], content_attr_names: [3] },
+      paths: ["/entry", "/content_attr_names/0"],
+    },
+    { status: 404, body: { error: 3 }, paths: ["/error"] },
+    { status: 409, body: { error: 3 }, paths: ["/error"] },
+  ])(
+    "rejects malformed lexicon HTTP $status with structured paths and metadata",
+    async ({ status, body, paths }) => {
+      const response = jsonResponse(body, status, {
+        headers: { "x-source": "lexicon-regression" },
+      });
+      const client = createSefariaClient({
+        fetch: async () => response,
+        cache: false,
+      });
+      await expect(
+        lexicon.getLexiconEntry({
+          client,
+          path: { lexicon: "BDB Dictionary", headword: "missing" },
+        }),
+      ).rejects.toMatchObject({
+        operationId: "get-lexicon-entry",
+        status,
+        response,
+        issues: paths.map((instancePath) =>
+          expect.objectContaining({ instancePath }),
+        ),
+      });
+    },
+  );
+
   it("preserves a calendar invalid-parameter JSON response as HTTP 200 data", async () => {
     const body = { error: "'Diaspora' parameter must be 1 or 0." };
     const client = createSefariaClient({

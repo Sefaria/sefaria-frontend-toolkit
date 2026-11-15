@@ -1,3 +1,4 @@
+import { availableParallelism } from "node:os";
 import { relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { playwright } from "@vitest/browser-playwright";
@@ -11,6 +12,8 @@ const mcpAppFromNodeModules = relative(
 
 export default defineConfig({
   test: {
+    // Git, filesystem and browser work contend well before all logical CPUs are busy.
+    maxWorkers: Math.min(4, availableParallelism()),
     projects: [
       {
         test: {
