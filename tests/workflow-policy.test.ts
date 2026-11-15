@@ -1,4 +1,6 @@
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import YAML from "yaml";
 import { describe, expect, it } from "vitest";
@@ -79,8 +81,35 @@ describe("exact release and validation workflow contracts", () => {
           step.with?.key?.startsWith("playwright-"),
       );
       expect(cache.with.key).toContain("${{ runner.arch }}");
-      expect(cache.with.key).toContain("${{ env.ImageOS }}");
+      expect(cache.with.key).toContain(
+        "${{ steps.browser-image.outputs.image }}",
+      );
       expect(cache.with).not.toHaveProperty("restore-keys");
+      const image = steps.find(
+        (step: { id?: string }) => step.id === "browser-image",
+      );
+      expect(steps.indexOf(image)).toBeLessThan(steps.indexOf(cache));
+      const directory = mkdtempSync(path.join(tmpdir(), "browser-image-"));
+      const output = path.join(directory, "output");
+      try {
+        const script = image.run.slice('node -e "'.length, -1);
+        for (const ImageOS of ["ubuntu24", "ubuntu26"]) {
+          execFileSync(process.execPath, ["-e", script], {
+            env: { ...process.env, ImageOS, GITHUB_OUTPUT: output },
+          });
+        }
+        expect(readFileSync(output, "utf8")).toBe(
+          "image=ubuntu24\nimage=ubuntu26\n",
+        );
+        expect(() =>
+          execFileSync(process.execPath, ["-e", script], {
+            env: { ...process.env, ImageOS: "", GITHUB_OUTPUT: output },
+            stdio: "pipe",
+          }),
+        ).toThrow();
+      } finally {
+        rmSync(directory, { recursive: true, force: true });
+      }
     },
   );
 

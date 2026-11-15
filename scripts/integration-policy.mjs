@@ -371,10 +371,14 @@ function validateValidationWorkflow(workflow, issues, filename) {
             with: { "node-version": 22, cache: "pnpm" },
           },
           {
+            id: "browser-image",
+            run: "node -e \"const fs = require('node:fs'); const image = process.env.ImageOS; if (!image) throw new Error('Hosted runner ImageOS is required'); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'image=' + image + '\\n');\"",
+          },
+          {
             uses: "actions/cache@v4",
             with: {
               path: "${{ runner.os == 'Windows' && '~\\AppData\\Local\\ms-playwright' || '~/.cache/ms-playwright' }}",
-              key: "playwright-${{ runner.os }}-${{ runner.arch }}-${{ env.ImageOS }}-${{ hashFiles('pnpm-lock.yaml') }}",
+              key: "playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.browser-image.outputs.image }}-${{ hashFiles('pnpm-lock.yaml') }}",
             },
           },
           { run: "pnpm setup:agent" },

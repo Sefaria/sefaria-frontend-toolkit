@@ -110,10 +110,12 @@ jobs:
             candidate/pnpm-lock.yaml
       - run: pnpm install --frozen-lockfile
         working-directory: control
+      - id: browser-image
+        run: node -e "const fs = require('node:fs'); const image = process.env.ImageOS; if (!image) throw new Error('Hosted runner ImageOS is required'); fs.appendFileSync(process.env.GITHUB_OUTPUT, 'image=' + image + '\n');"
       - uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ env.ImageOS }}-${{ hashFiles('candidate/pnpm-lock.yaml', 'control/pnpm-lock.yaml') }}
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.browser-image.outputs.image }}-${{ hashFiles('candidate/pnpm-lock.yaml', 'control/pnpm-lock.yaml') }}
       - run: pnpm setup:agent
       - run: pnpm exec playwright install --with-deps chromium firefox webkit
         working-directory: control
