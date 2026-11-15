@@ -247,7 +247,7 @@ The current command runs Prettier and Oxlint first, then stale-OpenAPI and integ
 
 Every run writes a bounded machine-readable result to `.artifacts/check/result.json`. CI uploads that result and allowlisted browser diagnostics only after a platform failure. A Linux success cannot hide a Windows failure: the required `check` aggregation succeeds only when the complete matrix succeeds.
 
-Pages runs the complete `pnpm check` on its explicitly selected source with `/sefaria-frontend-toolkit/` as the base. A second site-only build binds either candidate-local modules or the selected exact npm version before acceptance/upload. The main controller and documentation checkout are separate and pinned within each run. CI and Pages cache Playwright browsers by operating system and lockfile hash. `pnpm setup:agent` still runs its three-browser launch probe.
+Pages runs the complete `pnpm check` on its explicitly selected source with `/sefaria-frontend-toolkit/` as the base. A second site-only build binds either candidate-local modules or the selected exact npm version before acceptance/upload. The main controller and documentation checkout are separate and pinned within each run. CI and Pages cache Playwright browsers by operating system, architecture, hosted runner image (`ImageOS`) and lockfile hash, without broader restore keys. Browser revisions can remain the same across Linux distributions while their required system libraries differ; an Ubuntu image upgrade must not restore binaries built for the previous distribution. `pnpm setup:agent` still installs Linux system dependencies and runs its three-browser launch probe.
 
 ### Documentation-site inner loop
 

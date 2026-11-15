@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 
 const WORKFLOW_SHA256 =
-  "bc7db3fd161d23a5d5563a7ca6027c74846fd312b378ff48464e70ab6b867762";
+  "32abad575c4ca05263814e626f7bdefe1b6c0ee05825e90054bbfb69f4db35f2";
 
 export function validatePagesWorkflow(workflow, issues, filename) {
   const digest = createHash("sha256")

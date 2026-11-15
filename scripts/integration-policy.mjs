@@ -374,7 +374,7 @@ function validateValidationWorkflow(workflow, issues, filename) {
             uses: "actions/cache@v4",
             with: {
               path: "${{ runner.os == 'Windows' && '~\\AppData\\Local\\ms-playwright' || '~/.cache/ms-playwright' }}",
-              key: "playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}",
+              key: "playwright-${{ runner.os }}-${{ runner.arch }}-${{ env.ImageOS }}-${{ hashFiles('pnpm-lock.yaml') }}",
             },
           },
           { run: "pnpm setup:agent" },

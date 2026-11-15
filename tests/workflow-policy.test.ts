@@ -66,6 +66,24 @@ describe("exact release and validation workflow contracts", () => {
       );
   });
 
+  it.each([
+    ["validate-toolkit.yml", "validation"],
+    ["pages.yml", "build"],
+  ])(
+    "isolates %s browser caches by runner image and architecture",
+    (name, job) => {
+      const steps = YAML.parse(read(name)).jobs[job].steps;
+      const cache = steps.find(
+        (step: { uses?: string; with?: { key?: string } }) =>
+          step.uses === "actions/cache@v4" &&
+          step.with?.key?.startsWith("playwright-"),
+      );
+      expect(cache.with.key).toContain("${{ runner.arch }}");
+      expect(cache.with.key).toContain("${{ env.ImageOS }}");
+      expect(cache.with).not.toHaveProperty("restore-keys");
+    },
+  );
+
   it("captures exact package assets before approval and never builds or packs in publication", () => {
     const jobs = YAML.parse(release).jobs;
     expect(jobs.publish.environment).toBe("npm-release");
